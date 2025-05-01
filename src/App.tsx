@@ -19,7 +19,7 @@ const basename = (path: string) => {
   return parts[parts.length - 1];
 };
 
-const maps = import.meta.glob("/**/maps/*.map", {
+const maps = import.meta.glob("/public/maps/*.map", {
   query: "?url",
   import: "default",
 }) as Record<string, () => Promise<string>>;
@@ -28,7 +28,9 @@ function useMap(url: string) {
   return useQuery({
     queryKey: ["map", url],
     queryFn: async () => {
-      const cells = parseMap(await (await fetch(url)).text());
+      const cells = parseMap(
+        await (await fetch(`./maps/${basename(url)}`)).text()
+      );
       const b = {
         height: cells.length,
         width: cells[0].length,
