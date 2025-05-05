@@ -7,6 +7,8 @@ import { client } from "./client";
 import { id, lerp, lerpRadians } from "./utils";
 import { last, range, trim } from "lodash";
 
+// ─── Input State ─────────────────────────────────────────────────────────────
+
 export const mapFileAtom = atom<File | null>(null);
 export const scenarioFileAtom = atom<File | null>(null);
 export const solutionFileAtom = atom<File | null>(null);
@@ -14,6 +16,8 @@ export const solutionFileAtom = atom<File | null>(null);
 export const useMapFile = () => useAtom(mapFileAtom);
 export const useScenarioFile = () => useAtom(scenarioFileAtom);
 export const useSolutionFile = () => useAtom(solutionFileAtom);
+
+// ─── Computed ────────────────────────────────────────────────────────────────
 
 export const agentCountAtom = atom(async (get) => {
   const a = get(solutionFileAtom);
@@ -84,6 +88,8 @@ export const useLength = () => {
   const [length] = useAtom(lengthAtom);
   return length;
 };
+
+// ─── Run ─────────────────────────────────────────────────────────────────────
 
 const mutex = new Mutex();
 

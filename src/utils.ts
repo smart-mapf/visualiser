@@ -6,5 +6,8 @@ export function id(file?: File | null) {
 
 export const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 
-export const lerpRadians = (a: number, b: number, t: number) =>
-  a + (((((b - a) % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI)) - a) * t;
+export function lerpRadians(A: number, B: number, w: number) {
+  const CS = (1 - w) * Math.cos(A) + w * Math.cos(B);
+  const SN = (1 - w) * Math.sin(A) + w * Math.sin(B);
+  return Math.atan2(SN, CS);
+}
