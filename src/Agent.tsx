@@ -2,10 +2,9 @@ import { a, useSpring } from "@react-spring/three";
 import { Shadow } from "@react-three/drei";
 import { ceil, clamp, floor } from "lodash";
 import { ComponentProps } from "react";
+import { lerp } from "./utils";
 
 const Group = a("group");
-
-const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 
 export function Agent({
   path = [],
@@ -24,6 +23,9 @@ export function Agent({
       precision: 0.0001,
     },
   });
+  if (!path.length) {
+    return <></>;
+  }
   const position = springs.time.to((x) => {
     const high = path.length - 1;
     const i = clamp(floor(x), 0, high);

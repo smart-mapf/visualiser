@@ -1,4 +1,4 @@
-import { Instance, Instances } from "@react-three/drei";
+import { Grid, Instance, Instances } from "@react-three/drei";
 import { memo, ReactNode } from "react";
 
 const Obstacles = memo(
@@ -54,8 +54,19 @@ export function Domain({
 } & DomainProps) {
   return (
     <>
-      <Obstacles items={items} size={size} />
-      <group position={[-(size?.width ?? 0) / 2, 0, -(size?.height ?? 0) / 2]}>
+      {items.length ? (
+        <Obstacles items={items} size={size} />
+      ) : (
+        <Grid args={[10, 10]} />
+      )}
+      <group
+        scale={[-1, 1, -1]}
+        position={[
+          -(size?.width ?? 0) / 2 + 1,
+          0,
+          -(size?.height ?? 0) / 2 + 1,
+        ]}
+      >
         {children}
       </group>
     </>
