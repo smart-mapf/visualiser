@@ -26,6 +26,7 @@
     "postprocessing": "^6.37.3",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
+    "react-use": "^17.6.0",
     "smart-service": "workspace:*",
     "three": "^0.176.0",
     "three-csm": "^4.2.1"

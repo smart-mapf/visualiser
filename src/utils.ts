@@ -6,8 +6,14 @@ export function id(file?: File | null) {
 
 export const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 
-export function lerpRadians(A: number, B: number, w: number) {
-  const CS = (1 - w) * Math.cos(A) + w * Math.cos(B);
-  const SN = (1 - w) * Math.sin(A) + w * Math.sin(B);
-  return Math.atan2(SN, CS);
+export function lerpRadians(a: number, b: number, t: number) {
+  const TAU = Math.PI * 2;
+
+  // Normalize the difference to the range [-π, π]
+  let delta = ((b - a + Math.PI) % TAU) - Math.PI;
+
+  // Correct for negative modulo results
+  if (delta < -Math.PI) delta += TAU;
+
+  return a + delta * t;
 }

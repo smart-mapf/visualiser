@@ -8,11 +8,11 @@ const Obstacles = memo(
   }: DomainProps) => (
     <>
       <Instances
-        scale={[1, 1, -1]}
-        rotation={[0, -Math.PI / 2, 0]}
+        scale={[-1, 1, -1]}
+        rotation={[0, Math.PI / 2, 0]}
         limit={items?.length ?? 0}
         castShadow
-        position={[-height / 2, 0, -width / 2]}
+        position={[height / 2, 0, -width / 2]}
       >
         <meshStandardMaterial color="#555" />
         <boxGeometry />
@@ -24,7 +24,7 @@ const Obstacles = memo(
           />
         ))}
       </Instances>
-      <mesh receiveShadow rotation={[-Math.PI / 2, 0, 0]}>
+      <mesh receiveShadow rotation={[-Math.PI / 2, 0, -Math.PI / 2]}>
         <meshStandardMaterial color="#444" />
         <planeGeometry args={[width, height]} />
       </mesh>
@@ -60,12 +60,8 @@ export function Domain({
         <Grid args={[10, 10]} />
       )}
       <group
-        scale={[-1, 1, -1]}
-        position={[
-          -(size?.width ?? 0) / 2 + 1,
-          0,
-          -(size?.height ?? 0) / 2 + 1,
-        ]}
+        scale={[1, 1, 1]}
+        position={[(size?.height ?? 0) / 2 - 1, 0, -(size?.width ?? 0) / 2 + 1]}
       >
         {children}
       </group>

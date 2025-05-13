@@ -1,11 +1,11 @@
 import { useMutation } from "@tanstack/react-query";
 import { Mutex } from "async-mutex";
 import { atom, useAtom } from "jotai";
+import { identity, last, range, trim } from "lodash";
 import { Step } from "smart";
 import "./App.css";
 import { client } from "./client";
 import { id, lerp, lerpRadians } from "./utils";
-import { last, range, trim } from "lodash";
 
 // ─── Input State ─────────────────────────────────────────────────────────────
 
@@ -19,12 +19,33 @@ export const useSolutionFile = () => useAtom(solutionFileAtom);
 
 // ─── Computed ────────────────────────────────────────────────────────────────
 
-export const agentCountAtom = atom(async (get) => {
+export const solutionContentsAtom = atom(async (get) => {
   const a = get(solutionFileAtom);
-  if (!a) return 0;
-  const text = await a.text();
+  if (!a) return "";
+  return await a.text();
+});
+
+export const agentCountAtom = atom(async (get) => {
+  const text = await get(solutionContentsAtom);
   return trim(text).split("\n").length;
 });
+
+export const pathsAtom = atom(async (get) => {
+  const text = await get(solutionContentsAtom);
+  const lines = trim(text).split("\n");
+  if (!text) return [];
+  const out = lines.map((l) => {
+    const [, p] = l.split(":");
+    const pairs = p.split("->");
+    return pairs.filter(identity).map((p) => {
+      const [x, y] = trim(p, "()").split(",");
+      return { x: +x, y: +y };
+    });
+  });
+  console.log(out);
+  return out;
+});
+
 export const useAgentCount = () => {
   const [agentCount] = useAtom(agentCountAtom);
   return agentCount;
@@ -114,6 +135,10 @@ export function useRun() {
           clear();
           const s = client.run.subscribe(options, {
             onData: (data) => {
+              if ("error" in data) {
+                console.error(data.error);
+                rej(data.error);
+              }
               if ("clock" in data) {
                 append(data);
               }
