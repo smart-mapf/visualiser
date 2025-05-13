@@ -3,9 +3,8 @@ import { Mutex } from "async-mutex";
 import { atom, useAtom } from "jotai";
 import { identity, last, range, trim } from "lodash";
 import { Step } from "smart";
-import "./App.css";
-import { client } from "./client";
-import { id, lerp, lerpRadians } from "./utils";
+import { client } from "client/trpc";
+import { id, lerp, lerpRadians } from "utils";
 
 // ─── Input State ─────────────────────────────────────────────────────────────
 
@@ -34,7 +33,7 @@ export const pathsAtom = atom(async (get) => {
   const text = await get(solutionContentsAtom);
   const lines = trim(text).split("\n");
   if (!text) return [];
-  const out = lines.map((l) => {
+  return lines.map((l) => {
     const [, p] = l.split(":");
     const pairs = p.split("->");
     return pairs.filter(identity).map((p) => {
@@ -42,8 +41,6 @@ export const pathsAtom = atom(async (get) => {
       return { x: +x, y: +y };
     });
   });
-  console.log(out);
-  return out;
 });
 
 export const useAgentCount = () => {
