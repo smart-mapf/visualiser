@@ -22,6 +22,7 @@
     "babel-plugin-react-compiler": "^19.1.0-rc.1",
     "jotai": "^2.12.3",
     "leva": "^0.10.0",
+    "leva-file-picker": "^1.2.3",
     "lodash": "^4.17.21",
     "postprocessing": "^6.37.3",
     "react": "^19.1.0",
