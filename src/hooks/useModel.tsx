@@ -1,13 +1,16 @@
 import { useGLTF } from "@react-three/drei";
-import { values } from "lodash";
+import { head, values } from "lodash";
 import { useMemo } from "react";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 
-export function useModel() {
-  const { meshes: high } = useGLTF("./robot-low.gltf");
+export function useModel(path: string) {
+  const { meshes, materials } = useGLTF(path);
 
-  return useMemo(
-    () => mergeGeometries(values(high).map((h) => h.geometry)),
-    [high]
-  );
+  return {
+    geometry: useMemo(
+      () => mergeGeometries(values(meshes).map((h) => h.geometry)),
+      [meshes]
+    ),
+    material: useMemo(() => head(values(materials)), [materials]),
+  };
 }
