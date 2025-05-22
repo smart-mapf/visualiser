@@ -20,7 +20,7 @@ export function CameraControls() {
     <OrbitControls
       ref={controlsRef}
       minPolarAngle={0}
-      maxPolarAngle={Math.PI / 2}
+      maxPolarAngle={Math.PI / 2.25}
     />
   );
 }

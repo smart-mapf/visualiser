@@ -190,25 +190,35 @@ export function Agent({ i, ...props }: { i: number } & InstanceProps) {
   const a = useAgentPosition(i);
 
   if (!a) {
-    console.log("no agent");
     return undefined;
   }
 
   return (
-    <Suspense fallback={null}>
-      <Instance
-        position={a.position}
-        rotation={a.rotation}
-        {...props}
-        scale={(props.scale as number) * scale}
-        onClick={() => {
-          toggleSelected();
-        }}
-        onPointerOver={() => toggleHovered(true)}
-        onPointerOut={() => toggleHovered(false)}
-        color={hovered ? "#ccc" : "#fff"}
-      />
-      {<Path hover={hovered} visible={selected} id={i} current={a.position} />}
-    </Suspense>
+    <>
+      <Suspense fallback={null}>
+        <Instance
+          position={a.position}
+          rotation={a.rotation}
+          {...props}
+          scale={(props.scale as number) * scale}
+          onClick={() => {
+            toggleSelected();
+          }}
+          onPointerOver={() => toggleHovered(true)}
+          onPointerOut={() => toggleHovered(false)}
+          color={hovered ? "#ccc" : "#fff"}
+        />
+      </Suspense>
+      <Suspense fallback={null}>
+        {
+          <Path
+            hover={hovered}
+            visible={selected}
+            id={i}
+            current={a.position}
+          />
+        }
+      </Suspense>
+    </>
   );
 }

@@ -1,11 +1,15 @@
+import { useFrame } from "@react-three/fiber";
 import { Mutex } from "async-mutex";
 import { clear, get, set } from "idb-keyval";
 import { atom, useAtom, useAtomValue, useSetAtom } from "jotai";
-import { clamp, defer, keys, zip } from "lodash";
+import { selectAtom } from "jotai/utils";
+import { defer, floor, fromPairs, isEqual, round, throttle, zip } from "lodash";
+import { store } from "main";
 import { useEffect, useMemo, useState } from "react";
-import { useRafLoop } from "react-use";
+import { useEffectOnce } from "react-use";
 import { AdgProgress, Step } from "smart";
 import { lerp, lerpRadians } from "utils";
+import { useSpeed } from "./play";
 
 const CHUNK_SIZE = 512;
 
@@ -20,47 +24,48 @@ export const useTime = () => useAtom(timeAtom);
 export const timeSmoothAtom = atom<number>(0);
 export const useTimeSmooth = () => useAtom(timeSmoothAtom);
 
-export const chunkMapAtom = atom<Record<number, State[]>>({});
+export const roundedTimeSmoothAtom = selectAtom(timeSmoothAtom, (v) =>
+  round(v)
+);
 
-function lerpItems(a: State, b: State, t: number): State {
-  return {
-    state: {
-      clock: lerp(a.state.clock, b.state.clock, t),
-      agents: zip(a.state.agents, b.state.agents).map(([a, b]) => ({
-        ...a!,
-        x: lerp(a!.x, b!.x, t),
-        y: lerp(a!.y, b!.y, t),
-        z: lerp(a!.z, b!.z, t),
-        rx: lerpRadians(a!.rx, b!.rx, t),
-        ry: lerpRadians(a!.ry, b!.ry, t),
-        rz: lerpRadians(a!.rz, b!.rz, t),
-      })),
-      type: "tick",
-    },
-    adg: b.adg ?? a.adg,
+const currentCacheSetAtom = selectAtom(
+  timeSmoothAtom,
+  (t) => {
+    const t0 = floor(t / CHUNK_SIZE);
+    return [t0 - 1, t0, t0 + 1].filter((i) => i >= 0);
+  },
+  isEqual
+);
+
+const cache = new Map<number, { length: number; state: State[] }>();
+
+const cacheAtom = atom<
+  Record<number, { source: "cache" | "storage"; state: State[] }>
+>({});
+
+const setCacheAtom = atom(null, async (get, set) => {
+  const prev = get(cacheAtom);
+  const cs = get(currentCacheSetAtom);
+  const load = async (i: number) => {
+    const p = prev[i];
+    if (p && p.source === "storage") return p.state;
+    const c = cache.get(i);
+    if (c) return { source: "cache" as const, state: c.state };
+    return {
+      source: "storage" as const,
+      state: await loadChunkFromDisk(i),
+    };
   };
-}
+  set(
+    cacheAtom,
+    fromPairs(await Promise.all(cs.map(async (c) => [c, await load(c)])))
+  );
+});
 
 // Atom to get interpolated item
 export const currentItemAtom = atom<State | null>((get) => {
-  const t = get(timeAtom);
-  const i0 = Math.floor(t);
-  const i1 = Math.ceil(t);
-  const alpha = t - i0;
-
-  const chunkMap = get(chunkMapAtom);
-  const c0 = Math.floor(i0 / CHUNK_SIZE);
-  const c1 = Math.floor(i1 / CHUNK_SIZE);
-
-  const chunk0 = chunkMap[c0];
-  const chunk1 = chunkMap[c1];
-
-  const item0 = chunk0?.[i0 % CHUNK_SIZE];
-  const item1 = chunk1?.[i1 % CHUNK_SIZE];
-
-  if (!item0 || !item1) return null;
-
-  return lerpItems(item0, item1, alpha);
+  const t = get(roundedTimeSmoothAtom);
+  return get(cacheAtom)[floor(t / CHUNK_SIZE)]?.state?.[t % CHUNK_SIZE];
 });
 
 export function usePreviousDefined<T>(t?: T) {
@@ -71,103 +76,93 @@ export function usePreviousDefined<T>(t?: T) {
   return prev;
 }
 
+const alpha = (n: number) => 0.1 - 1 / (0.1 * n + 1) + 1;
+
 export const useAgentPosition = (i: number) => {
-  const v1 = useAtomValue(
-    useMemo(
-      () =>
-        atom((get) => {
-          const a = get(currentItemAtom);
-          if (!a) return;
-          const agent = a.state.agents[i];
-          return {
-            constraints: a.adg?.constraints?.[i]?.constraining_agent,
-            position: [agent.x + 0.5, 0, -agent.y - 0.5] as const,
-            rotation: [0, agent.rz, 0] as const,
-          };
-        }),
-      [i]
+  const [speed] = useSpeed();
+  const v0 = usePreviousDefined(
+    useAtomValue(
+      useMemo(
+        () =>
+          atom((get) => {
+            const a = get(currentItemAtom);
+            if (!a) return;
+            const agent = a.state.agents[i];
+            return {
+              constraints: a.adg?.constraints?.[i]?.constraining_agent,
+              position: [agent.x + 0.5, 0, -agent.y - 0.5] as [
+                number,
+                number,
+                number
+              ],
+              rotation: [0, agent.rz, 0] as [number, number, number],
+            };
+          }),
+        [i]
+      )
     )
   );
-  const v2 = usePreviousDefined(v1);
-  return v2;
+  const [current, setCurrent] = useState(v0);
+  useFrame(() => {
+    if (v0) {
+      setCurrent((p) => {
+        if (p) {
+          return {
+            constraints: v0.constraints,
+            position: zip(p.position, v0.position).map(([a, b]) =>
+              lerp(a!, b!, alpha(speed))
+            ) as [number, number, number],
+            rotation: zip(p.rotation, v0.rotation).map(([a, b]) =>
+              lerpRadians(a!, b!, alpha(speed))
+            ) as [number, number, number],
+          };
+        }
+        return v0;
+      });
+    }
+  });
+  return current;
 };
 
-const cache = new Map<number, { length: number; state: State[] }>();
-
 // Load chunk by index
-async function loadChunk(chunkIndex: number): Promise<State[]> {
-  return cache.get(chunkIndex)?.state ?? (await get(chunkIndex)) ?? [];
+async function loadChunkFromDisk(i: number): Promise<State[]> {
+  console.log("load chunk from disk", i);
+  const r = await get(i);
+  console.log("loaded chunk from disk", i, r?.length);
+  return r ?? [];
 }
 
 async function finaliseChunk(chunkIndex: number) {
-  const data = cache.get(chunkIndex)!.state;
+  const data = cache.get(chunkIndex);
+  console.log("finalising", chunkIndex);
+  if (!data) return;
+  console.log("finalise", chunkIndex, data.length);
   await set(chunkIndex, data);
+  console.log("finalise done", chunkIndex, data.length);
   cache.delete(chunkIndex);
 }
-
-// Atom to sync chunks around t
-export const syncChunksAtom = atom<null, never[], unknown>(
-  null,
-  async (get, set) => {
-    const t = get(timeSmoothAtom);
-    const i0 = Math.floor(t);
-    const i1 = Math.ceil(t);
-    const currentChunks = get(chunkMapAtom);
-
-    const requiredChunks = new Set([
-      Math.floor(i0 / CHUNK_SIZE),
-      Math.floor(i1 / CHUNK_SIZE),
-      Math.floor(i1 / CHUNK_SIZE + 1),
-      clamp(Math.floor(i0 / CHUNK_SIZE - 1), 0, Infinity),
-    ]);
-
-    const updatedChunks: Record<number, State[]> = { ...currentChunks };
-    let changed = false;
-
-    for (const chunkIndex of requiredChunks) {
-      if (!updatedChunks[chunkIndex]) {
-        updatedChunks[chunkIndex] = await loadChunk(chunkIndex);
-        changed = true;
-      }
-    }
-
-    for (const chunk of keys(updatedChunks)) {
-      if (!requiredChunks.has(+chunk)) {
-        delete updatedChunks[+chunk];
-        changed = true;
-      }
-    }
-
-    if (changed) {
-      set(chunkMapAtom, updatedChunks);
-    }
-  }
-);
 
 const m = new Mutex();
 
 // Append item
 export const appendAtom = atom<null, [State[]], unknown>(
   null,
-  (get, set, newItems) => {
-    for (const item of newItems) {
-      const i = Math.floor(item.state.clock / CHUNK_SIZE);
-      // Don't wait for this to complete
+  (_get, set, items) => {
+    for (const item of items) {
+      const i = floor(item.state.clock / CHUNK_SIZE);
       const chunk = cache.get(i) ?? { length: 0, state: [] };
       chunk.state[item.state.clock % CHUNK_SIZE] = item;
       chunk.length++;
       cache.set(i, chunk);
-      set(chunkMapAtom, (l) => ({ ...l, [i]: chunk.state }));
       if (chunk.length === CHUNK_SIZE) {
         defer(async () => {
           await finaliseChunk(i);
-          set(syncChunksAtom);
         });
       }
     }
-    set(syncChunksAtom);
-    set(timespanAtom, (t) => t + newItems.length);
-    set(lengthAtom, (l) => l + newItems.length);
+    set(setCacheAtom);
+    set(timespanAtom, (t) => t + items.length);
+    set(lengthAtom, (l) => l + items.length);
   }
 );
 
@@ -177,7 +172,7 @@ export const clearAtom = atom<null, never[], unknown>(null, (_get, set) => {
   m.runExclusive(async () => {
     await clear();
   }, 0);
-  set(chunkMapAtom, {});
+  set(cacheAtom, {});
   set(timeAtom, 0);
   set(lengthAtom, 0);
   set(timespanAtom, 0);
@@ -208,22 +203,40 @@ export const useLength = () => {
 };
 
 export function useAutoSyncChunks() {
-  const time = useAtomValue(timeSmoothAtom);
-  const syncChunks = useSetAtom(syncChunksAtom);
+  const time = useAtomValue(timeAtom);
+  const setCache = useSetAtom(setCacheAtom);
+  const b = useMemo(
+    () => throttle(setCache, 1000, { trailing: true, leading: false }),
+    [setCache]
+  );
   useEffect(() => {
-    syncChunks();
-  }, [time, syncChunks]);
+    b();
+  }, [time, b]);
 }
 
 export function useTimeSmoothService() {
-  const [time] = useTime();
-  const set = useSetAtom(timeSmoothAtom);
-  useRafLoop(() => {
-    set((t) => lerp(t, time, 0.05));
+  useEffect(() => {
+    let a: number;
+    const f = () => {
+      store.set(timeSmoothAtom, (t) => lerp(t, store.get(timeAtom), 0.05));
+      a = requestAnimationFrame(f);
+    };
+    f();
+    return () => {
+      cancelAnimationFrame(a);
+    };
+  });
+}
+
+export function useReset() {
+  const clear = useSetAtom(clearAtom);
+  useEffectOnce(() => {
+    clear();
   });
 }
 
 export function Service() {
+  useReset();
   useAutoSyncChunks();
   useTimeSmoothService();
   return null;
