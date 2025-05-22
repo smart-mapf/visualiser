@@ -37,7 +37,7 @@ const currentCacheSetAtom = selectAtom(
   isEqual
 );
 
-const cache = new Map<number, { length: number; state: State[] }>();
+const cache: Record<number, { length: number; state: State[] }> = {};
 
 const cacheAtom = atom<
   Record<number, { source: "cache" | "storage"; state: State[] }>
@@ -48,8 +48,8 @@ const setCacheAtom = atom(null, async (get, set) => {
   const cs = get(currentCacheSetAtom);
   const load = async (i: number) => {
     const p = prev[i];
-    if (p && p.source === "storage") return p.state;
-    const c = cache.get(i);
+    if (p && p.source === "storage") return p;
+    const c = cache[i];
     if (c) return { source: "cache" as const, state: c.state };
     return {
       source: "storage" as const,
@@ -132,14 +132,10 @@ async function loadChunkFromDisk(i: number): Promise<State[]> {
   return r ?? [];
 }
 
-async function finaliseChunk(chunkIndex: number) {
-  const data = cache.get(chunkIndex);
-  console.log("finalising", chunkIndex);
-  if (!data) return;
-  console.log("finalise", chunkIndex, data.length);
-  await set(chunkIndex, data);
-  console.log("finalise done", chunkIndex, data.length);
-  cache.delete(chunkIndex);
+async function finaliseChunk(i: number, data: State[]) {
+  console.log("finalise", i, data.length);
+  await set(i, data);
+  console.log("finalise done", i, data.length);
 }
 
 const m = new Mutex();
@@ -150,14 +146,14 @@ export const appendAtom = atom<null, [State[]], unknown>(
   (_get, set, items) => {
     for (const item of items) {
       const i = floor(item.state.clock / CHUNK_SIZE);
-      const chunk = cache.get(i) ?? { length: 0, state: [] };
+      const chunk = cache[i] ?? { length: 0, state: [] };
       chunk.state[item.state.clock % CHUNK_SIZE] = item;
       chunk.length++;
-      cache.set(i, chunk);
+      cache[i] = chunk;
       if (chunk.length === CHUNK_SIZE) {
-        defer(async () => {
-          await finaliseChunk(i);
-        });
+        delete cache[i];
+        // Don't wait for this to complete
+        finaliseChunk(i, chunk.state);
       }
     }
     set(setCacheAtom);
