@@ -2,10 +2,10 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { Mutex } from "async-mutex";
 import { client } from "client/trpc";
 import { atom, useAtom, useSetAtom } from "jotai";
-import { identity, trim } from "lodash";
+import { identity, throttle, trim } from "lodash";
 import { AdgProgress } from "smart";
 import { id } from "utils";
-import { appendAtom, clearAtom } from "./store";
+import { appendAtom, clearAtom, State } from "./store";
 
 // ─── Input State ─────────────────────────────────────────────────────────────
 
@@ -66,23 +66,35 @@ export function useRun() {
           scen: await scenarioFile.text(),
           paths: await solutionFile.text(),
         };
+        let actions: State[] = [];
+        const f = throttle(
+          () => {
+            append(actions);
+            actions = [];
+          },
+          1500,
+          { trailing: true, leading: false }
+        );
         let adg: AdgProgress | undefined = undefined;
         return await new Promise<void>((res, rej) => {
           clear();
           const s = client.run.subscribe(options, {
             onData: (data) => {
-              if ("type" in data) {
-                switch (data.type) {
-                  case "adg_progress":
-                    adg = data;
-                    break;
-                  case "tick":
-                    append({ state: data, adg });
-                    break;
-                  case "error":
-                    console.error(data.error);
-                    rej(data.error);
-                    break;
+              for (const d of data) {
+                if ("type" in d) {
+                  switch (d.type) {
+                    case "adg_progress":
+                      adg = d;
+                      break;
+                    case "tick":
+                      actions.push({ state: d, adg });
+                      f();
+                      break;
+                    case "error":
+                      console.error(d.error);
+                      rej(d.error);
+                      break;
+                  }
                 }
               }
             },

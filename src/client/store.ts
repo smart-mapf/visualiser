@@ -1,7 +1,7 @@
 import { Mutex } from "async-mutex";
 import { clear, get, set } from "idb-keyval";
 import { atom, useAtom, useAtomValue, useSetAtom } from "jotai";
-import { clamp, keys, zip } from "lodash";
+import { clamp, defer, keys, zip } from "lodash";
 import { useEffect, useMemo, useState } from "react";
 import { useRafLoop } from "react-use";
 import { AdgProgress, Step } from "smart";
@@ -9,7 +9,7 @@ import { lerp, lerpRadians } from "utils";
 
 const CHUNK_SIZE = 512;
 
-type Item = {
+export type State = {
   state: Step;
   adg?: AdgProgress;
 };
@@ -20,9 +20,9 @@ export const useTime = () => useAtom(timeAtom);
 export const timeSmoothAtom = atom<number>(0);
 export const useTimeSmooth = () => useAtom(timeSmoothAtom);
 
-export const chunkMapAtom = atom<Record<number, Item[]>>({});
+export const chunkMapAtom = atom<Record<number, State[]>>({});
 
-function lerpItems(a: Item, b: Item, t: number): Item {
+function lerpItems(a: State, b: State, t: number): State {
   return {
     state: {
       clock: lerp(a.state.clock, b.state.clock, t),
@@ -42,8 +42,8 @@ function lerpItems(a: Item, b: Item, t: number): Item {
 }
 
 // Atom to get interpolated item
-export const currentItemAtom = atom<Item | null>((get) => {
-  const t = get(timeSmoothAtom);
+export const currentItemAtom = atom<State | null>((get) => {
+  const t = get(timeAtom);
   const i0 = Math.floor(t);
   const i1 = Math.ceil(t);
   const alpha = t - i0;
@@ -92,22 +92,17 @@ export const useAgentPosition = (i: number) => {
   return v2;
 };
 
-const cache = new Map<number, Item[]>();
+const cache = new Map<number, { length: number; state: State[] }>();
 
 // Load chunk by index
-async function loadChunk(chunkIndex: number): Promise<Item[]> {
-  return cache.get(chunkIndex) ?? (await get(chunkIndex)) ?? [];
+async function loadChunk(chunkIndex: number): Promise<State[]> {
+  return cache.get(chunkIndex)?.state ?? (await get(chunkIndex)) ?? [];
 }
 
 async function finaliseChunk(chunkIndex: number) {
-  const data = await loadChunk(chunkIndex);
+  const data = cache.get(chunkIndex)!.state;
   await set(chunkIndex, data);
   cache.delete(chunkIndex);
-}
-
-// Save chunk to IndexedDB
-function saveChunk(chunkIndex: number, data: Item[]) {
-  cache.set(chunkIndex, data);
 }
 
 // Atom to sync chunks around t
@@ -126,7 +121,7 @@ export const syncChunksAtom = atom<null, never[], unknown>(
       clamp(Math.floor(i0 / CHUNK_SIZE - 1), 0, Infinity),
     ]);
 
-    const updatedChunks: Record<number, Item[]> = { ...currentChunks };
+    const updatedChunks: Record<number, State[]> = { ...currentChunks };
     let changed = false;
 
     for (const chunkIndex of requiredChunks) {
@@ -152,24 +147,27 @@ export const syncChunksAtom = atom<null, never[], unknown>(
 const m = new Mutex();
 
 // Append item
-export const appendAtom = atom<null, [Item], unknown>(
+export const appendAtom = atom<null, [State[]], unknown>(
   null,
-  (get, set, newItem) => {
-    const t = get(lengthAtom);
-    const chunkIndex = Math.floor(t / CHUNK_SIZE);
-    // Don't wait for this to complete
-    m.runExclusive(async () => {
-      const chunk = await loadChunk(chunkIndex);
-      chunk.push(newItem);
-      saveChunk(chunkIndex, chunk);
-      set(chunkMapAtom, (l) => ({ ...l, [chunkIndex]: chunk }));
+  (get, set, newItems) => {
+    for (const item of newItems) {
+      const i = Math.floor(item.state.clock / CHUNK_SIZE);
+      // Don't wait for this to complete
+      const chunk = cache.get(i) ?? { length: 0, state: [] };
+      chunk.state[item.state.clock % CHUNK_SIZE] = item;
+      chunk.length++;
+      cache.set(i, chunk);
+      set(chunkMapAtom, (l) => ({ ...l, [i]: chunk.state }));
       if (chunk.length === CHUNK_SIZE) {
-        await finaliseChunk(chunkIndex);
+        defer(async () => {
+          await finaliseChunk(i);
+          set(syncChunksAtom);
+        });
       }
-      set(syncChunksAtom);
-      set(timespanAtom, newItem.state.clock);
-    }, 1);
-    set(lengthAtom, (l) => l + 1);
+    }
+    set(syncChunksAtom);
+    set(timespanAtom, (t) => t + newItems.length);
+    set(lengthAtom, (l) => l + newItems.length);
   }
 );
 
