@@ -2,9 +2,10 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { Mutex } from "async-mutex";
 import { client } from "client/trpc";
 import { atom, useAtom, useSetAtom } from "jotai";
-import { identity, last, range, trim } from "lodash";
-import { AdgProgress, Step } from "smart";
-import { id, lerp, lerpRadians } from "utils";
+import { identity, trim } from "lodash";
+import { AdgProgress } from "smart";
+import { id } from "utils";
+import { appendAtom, clearAtom } from "./store";
 
 // ─── Input State ─────────────────────────────────────────────────────────────
 
@@ -43,82 +44,6 @@ export function useSolutionContents() {
   });
 }
 
-export const constraintAtom = atom<AdgProgress[]>([]);
-
-export const appendConstraintAtom = atom(
-  null,
-  (get, set, update: AdgProgress) => {
-    set(constraintAtom, [...get(constraintAtom), update]);
-  }
-);
-
-export const constraintByStep = (id: number, i: number) =>
-  atom((get) => {
-    const constraints = get(constraintAtom);
-    return (i >= constraints.length ? last(constraints) : constraints[i])
-      ?.constraints?.[id];
-  });
-
-export const resultAtom = atom<Step[]>([]);
-
-export const appendAtom = atom(null, (get, set, update: Step) => {
-  const previous = get(resultAtom);
-  if (previous.length) {
-    const tail = last(previous)!;
-    set(resultAtom, [
-      ...previous,
-      ...range(tail.clock + 1, update.clock).map((i) => {
-        const progress = (i - tail.clock) / (update.clock - tail.clock);
-        return {
-          type: "tick" as const,
-          clock: i,
-          agents: tail.agents.map((a, j) => ({
-            ...a,
-            x: lerp(a.x, update.agents[j].x, progress),
-            y: lerp(a.y, update.agents[j].y, progress),
-            z: lerp(a.z, update.agents[j].z, progress),
-            rx: lerpRadians(a.rx, update.agents[j].rx, progress),
-            ry: lerpRadians(a.ry, update.agents[j].ry, progress),
-            rz: lerpRadians(a.rz, update.agents[j].rz, progress),
-          })),
-        };
-      }),
-      update,
-    ]);
-  } else {
-    return set(resultAtom, [update]);
-  }
-});
-
-export const useAppend = () => {
-  const [, append] = useAtom(appendAtom);
-  return append;
-};
-
-export const clearAtom = atom(null, (_, set) => {
-  set(resultAtom, []);
-});
-export const useClear = () => {
-  const [, clear] = useAtom(clearAtom);
-  return clear;
-};
-
-export const timespanAtom = atom((get) => {
-  const l = last(get(resultAtom));
-  if (!l) return 0;
-  return l.clock;
-});
-export const useTimespan = () => {
-  const [timespan] = useAtom(timespanAtom);
-  return timespan;
-};
-
-export const lengthAtom = atom((get) => get(resultAtom).length);
-export const useLength = () => {
-  const [length] = useAtom(lengthAtom);
-  return length;
-};
-
 // ─── Run ─────────────────────────────────────────────────────────────────────
 
 const mutex = new Mutex();
@@ -129,7 +54,6 @@ export function useRun() {
   const [solutionFile] = useAtom(solutionFileAtom);
   const { data: contents } = useSolutionContents();
   const append = useSetAtom(appendAtom);
-  const appendConstraint = useSetAtom(appendConstraintAtom);
   const clear = useSetAtom(clearAtom);
   return useMutation({
     mutationFn: () =>
@@ -142,19 +66,24 @@ export function useRun() {
           scen: await scenarioFile.text(),
           paths: await solutionFile.text(),
         };
+        let adg: AdgProgress | undefined = undefined;
         return await new Promise<void>((res, rej) => {
           clear();
           const s = client.run.subscribe(options, {
             onData: (data) => {
-              if ("error" in data) {
-                console.error(data.error);
-                rej(data.error);
-              }
-              if ("clock" in data) {
-                append(data);
-              }
-              if ("type" in data && data.type === "adg_progress") {
-                appendConstraint(data);
+              if ("type" in data) {
+                switch (data.type) {
+                  case "adg_progress":
+                    adg = data;
+                    break;
+                  case "tick":
+                    append({ state: data, adg });
+                    break;
+                  case "error":
+                    console.error(data.error);
+                    rej(data.error);
+                    break;
+                }
               }
             },
             onError: (error) => {

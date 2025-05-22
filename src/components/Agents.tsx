@@ -9,7 +9,7 @@ import { useSolutionContents } from "client/run";
 useGLTF.preload("./robot-final.gltf");
 useTexture.preload("./base.png");
 
-export function Agents({ time: t }: { time: number }) {
+export function Agents() {
   const { geometry } = useModel("./robot-final.gltf");
   const texture = useTexture("./base.png");
 
@@ -29,13 +29,12 @@ export function Agents({ time: t }: { time: number }) {
       <Instances
         frustumCulled={false}
         castShadow
-        receiveShadow
         geometry={geometry}
         material={material}
       >
         {range(contents?.count ?? 0).map((i) => (
           <group position={[0, 0.1, 0]}>
-            <Agent i={i} key={i} time={t} scale={3} />
+            <Agent i={i} key={i} scale={3} />
           </group>
         ))}
       </Instances>

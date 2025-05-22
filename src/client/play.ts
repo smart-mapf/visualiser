@@ -1,8 +1,5 @@
 import { atom, useAtom } from "jotai";
 
-export const timeAtom = atom<number>(0);
-export const useTime = () => useAtom(timeAtom);
-
 export const autoplayAtom = atom<boolean>(true);
 export const useAutoplay = () => useAtom(autoplayAtom);
 

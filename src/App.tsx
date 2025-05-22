@@ -1,3 +1,4 @@
+import { Service } from "client/store";
 import { Inputs } from "Inputs";
 import { Leva } from "leva";
 import { Playback } from "Playback";
@@ -8,6 +9,7 @@ import { Stage } from "./components/Stage";
 function App() {
   return (
     <Suspense fallback={null}>
+      <Service />
       <Suspense fallback={null}>
         <Inputs />
         <Playback />

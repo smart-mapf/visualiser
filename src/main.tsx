@@ -1,8 +1,8 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { createStore, Provider } from "jotai";
 import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
-import { createStore, Provider } from "jotai";
 
 const client = new QueryClient();
 export const store = createStore();

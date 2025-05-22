@@ -1,24 +1,17 @@
-import {
-  speedAtom,
-  timeAtom,
-  useAutoplay,
-  usePlaying,
-  useSpeed,
-  useTime,
-} from "client/play";
-import { lengthAtom, useLength } from "client/run";
+import { speedAtom, useAutoplay, usePlaying, useSpeed } from "client/play";
+
+import { lengthAtom, timeAtom, useTime, useTimespan } from "client/store";
 import { button, useControls } from "leva";
 import { max, min, now, round } from "lodash";
 import { store } from "main";
 import { Suspense, useEffect } from "react";
 
 export function Playback() {
-  const length = useLength();
-
   const [playing, setPlaying] = usePlaying();
   const [speed, setSpeed] = useSpeed();
   const [autoplay, setAutoplay] = useAutoplay();
   const [time, setTime] = useTime();
+  const timespan = useTimespan();
 
   const [, set] = useControls(
     "Playback",
@@ -30,12 +23,12 @@ export function Playback() {
       },
       time: {
         onChange: setTime,
-        value: time,
+        value: time ?? 0,
         min: 0,
-        max: length,
+        max: timespan,
         step: 1,
         label: "Time",
-        disabled: !length,
+        disabled: !timespan,
       },
       speed: {
         value: speed,
@@ -46,11 +39,11 @@ export function Playback() {
         label: "Playback speed",
       },
       play: {
-        ...button(() => setPlaying((c) => !c), { disabled: !length }),
+        ...button(() => setPlaying((c) => !c), { disabled: !timespan }),
         label: playing ? "Pause" : "Play",
       },
     }),
-    [time, autoplay, speed, playing, length]
+    [time, autoplay, speed, playing, timespan]
   );
 
   useEffect(() => {

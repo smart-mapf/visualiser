@@ -21,6 +21,7 @@
     "@uidotdev/usehooks": "^2.4.1",
     "async-mutex": "^0.5.0",
     "babel-plugin-react-compiler": "^19.1.0-rc.1",
+    "idb-keyval": "^6.2.2",
     "jotai": "^2.12.3",
     "leva": "^0.10.0",
     "leva-file-picker": "^1.2.3",

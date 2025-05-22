@@ -3,10 +3,10 @@ import {
   useMapFile,
   useScenarioFile,
   useSolutionFile,
-  useLength,
   useRun,
   useSolutionContents,
 } from "client/run";
+import { useLength } from "client/store";
 import { useControls, button } from "leva";
 import { filePicker } from "leva-file-picker";
 import { store } from "main";
