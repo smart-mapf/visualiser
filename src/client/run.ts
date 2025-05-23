@@ -96,7 +96,7 @@ export function useRun() {
             };
             clear();
             const s = client.run.subscribe(options, {
-              onData: (data) => {
+              onData: ({ data }) => {
                 for (const d of data) {
                   if ("type" in d) {
                     switch (d.type) {
