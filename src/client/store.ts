@@ -81,9 +81,8 @@ export function usePreviousDefined<T>(t?: T) {
 
 const alpha = (n: number) => 0.1 - 1 / (0.1 * n + 1) + 1;
 
-export const useAgentPosition = (i: number) => {
-  const [speed] = useSpeed();
-  const v0 = usePreviousDefined(
+export const useAgentInfo = (i: number) => {
+  return usePreviousDefined(
     useAtomValue(
       useMemo(
         () =>
@@ -105,11 +104,24 @@ export const useAgentPosition = (i: number) => {
       )
     )
   );
+}
+
+function dist(a: [number, number, number], b: [number, number, number]) {
+  return Math.sqrt(
+    (a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2 + (a[2] - b[2]) ** 2
+  );
+}
+
+export const useAgentPosition = (i: number) => {
+  const v0 = useAgentInfo(i);
+  const [speed] = useSpeed();
   const [current, setCurrent] = useState(v0);
   useFrame(() => {
     if (v0) {
       setCurrent((p) => {
         if (p) {
+          // Teleport if too far away
+          if (dist(p.position, v0.position) > 0.5) return v0;
           return {
             constraints: v0.constraints,
             position: zip(p.position, v0.position).map(([a, b]) =>

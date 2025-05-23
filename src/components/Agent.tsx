@@ -14,6 +14,7 @@ import { head, last, thru } from "lodash";
 import { ComponentProps, Suspense } from "react";
 import { useBoolean, useTween } from "react-use";
 import { RectangleRounded } from "./RectangleRounded";
+import { useSelection } from "client/selection";
 
 const font = `./fonts/geist-medium.ttf`;
 
@@ -41,10 +42,8 @@ function Constraint({
   });
 
   return (
-    ///@ts-ignore excessively deep typing
     <AnimatedLine
       {...props}
-      ///@ts-ignore excessively deep typing
       points={[thru(a, ([x, y, z]) => [x, y + 1, z]), b]}
       dashOffset={springs.offset}
       dashScale={20}
@@ -184,7 +183,7 @@ export function Path({
 
 export function Agent({ i, ...props }: { i: number } & InstanceProps) {
   const scale = useTween("outExpo", 2000);
-  const [selected, toggleSelected] = useBoolean(false);
+  const [selected, toggleSelected] = useSelection();
   const [hovered, toggleHovered] = useBoolean(false);
 
   const a = useAgentPosition(i);
@@ -202,7 +201,7 @@ export function Agent({ i, ...props }: { i: number } & InstanceProps) {
           {...props}
           scale={(props.scale as number) * scale}
           onClick={() => {
-            toggleSelected();
+            toggleSelected(i);
           }}
           onPointerOver={() => toggleHovered(true)}
           onPointerOut={() => toggleHovered(false)}
@@ -213,7 +212,7 @@ export function Agent({ i, ...props }: { i: number } & InstanceProps) {
         {
           <Path
             hover={hovered}
-            visible={selected}
+            visible={selected.has(i)}
             id={i}
             current={a.position}
           />

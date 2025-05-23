@@ -12,7 +12,7 @@ export function Stage() {
         position: [0, 5, 10],
       }}
     >
-      <fog attach="fog" args={["#bcbeb9", 0, 200]} />
+      <fog attach="fog" args={["#eff2f3", 0, 200]} />
       <color attach="background" args={["#afc3cc"]} />
       <Light />
       <Sky inclination={0.52} sunPosition={[100, 100, 50]} />

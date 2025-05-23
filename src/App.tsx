@@ -6,6 +6,7 @@ import { Suspense } from "react";
 import "./App.css";
 import { Stage } from "./components/Stage";
 import { Logs } from "Logs";
+import { Selection } from "Selection";
 
 function App() {
   return (
@@ -14,6 +15,7 @@ function App() {
       <Suspense fallback={null}>
         <Inputs />
         <Playback />
+        <Selection />
         <Logs />
       </Suspense>
       <div style={{ height: "100vh", width: "100vw" }}>

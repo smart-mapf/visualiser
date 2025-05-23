@@ -6,7 +6,7 @@ import {
   useRun,
   useSolutionContents,
 } from "client/run";
-import { useLength } from "client/store";
+import { useClear, useLength } from "client/store";
 import { useControls, button } from "leva";
 import { filePicker } from "leva-file-picker";
 import { store } from "main";
@@ -14,7 +14,7 @@ import { Suspense } from "react";
 
 export function Inputs() {
   const [, setPlaying] = usePlaying();
-
+  const clear = useClear();
   const [mapFile, setMapFile] = useMapFile();
   const [scenarioFile, setScenarioFile] = useScenarioFile();
   const [solutionFile, setSolutionFile] = useSolutionFile();
@@ -31,19 +31,28 @@ export function Inputs() {
     {
       map: filePicker({
         label: "Map file",
-        onChange: setMapFile,
+        onChange: (f) => {
+          if (!f) clear();
+          setMapFile(f);
+        },
         accept: { "text/plain": [".map"] },
         disabled: buffering,
       }),
       scenario: filePicker({
         label: "Scenario",
-        onChange: setScenarioFile,
+        onChange: (f) => {
+          if (!f) clear();
+          setScenarioFile(f);
+        },
         accept: { "text/plain": [".scen"] },
         disabled: buffering,
       }),
       solution: filePicker({
         label: "Solution",
-        onChange: setSolutionFile,
+        onChange: (f) => {
+          if (!f) clear();
+          setSolutionFile(f);
+        },
         accept: { "text/plain": [] },
         disabled: buffering,
       }),
