@@ -9,12 +9,13 @@ import {
   Text,
 } from "@react-three/drei";
 import { useSolutionContents } from "client/run";
+import { useSelection } from "client/selection";
 import { useAgentPosition } from "client/store";
 import { head, last, thru } from "lodash";
 import { ComponentProps, Suspense } from "react";
 import { useBoolean, useTween } from "react-use";
-import { RectangleRounded } from "./RectangleRounded";
-import { useSelection } from "client/selection";
+import { rectangleRounded } from "./rectangleRounded";
+import { DoubleSide } from "three";
 
 const font = `./fonts/geist-medium.ttf`;
 
@@ -101,10 +102,14 @@ export function Path({
             <>
               <AnimatedBillboard scale={s.scale} position={[x, y + 1, z]}>
                 <mesh
-                  geometry={RectangleRounded(1, 0.4, 0.2, 4)}
+                  geometry={rectangleRounded(1, 0.4, 0.2, 4)}
                   renderOrder={9998}
                 >
-                  <meshBasicMaterial color="#fff" depthTest={false} />
+                  <meshBasicMaterial
+                    color="#fff"
+                    depthTest={false}
+                    side={DoubleSide}
+                  />
                 </mesh>
                 <AnimatedText
                   font={font}

@@ -1,7 +1,7 @@
 import { BufferAttribute } from "three";
 import { BufferGeometry } from "three/src/Three.Core.js";
 
-export function RectangleRounded(w: number, h: number, r: number, s: number) {
+export function rectangleRounded(w: number, h: number, r: number, s: number) {
   // width, height, radiusCorner, smoothness
   const pi2 = Math.PI * 2;
   const n = (s + 1) * 4; // number of segments
@@ -26,7 +26,7 @@ export function RectangleRounded(w: number, h: number, r: number, s: number) {
 
   return geometry;
 
-  function contour(j) {
+  function contour(j: number) {
     qu = Math.trunc((4 * j) / n) + 1; // quadrant  qu: 1..4
     sgx = qu === 1 || qu === 4 ? 1 : -1; // signum left/right
     sgy = qu < 3 ? 1 : -1; // signum  top / bottom
