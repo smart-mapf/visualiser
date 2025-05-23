@@ -19,7 +19,7 @@ export function Light() {
       0,
       floor(camera.position.z)
     );
-    const y = floor(clamp(camera.position.y, 4, 10_000) * 4);
+    const y = floor(clamp(camera.position.y, 6, 10_000) * 3);
     light.current.shadow.camera.left = -y;
     light.current.shadow.camera.right = y;
     light.current.shadow.camera.top = -y;
@@ -36,7 +36,7 @@ export function Light() {
         color="#fff2d9"
         castShadow
         shadow-bias={0.0001}
-        shadow-mapSize={[2048, 2048]}
+        shadow-mapSize={[2048 * 1.5, 2048 * 1.5]}
         intensity={4}
       />
     </>

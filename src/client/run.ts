@@ -1,11 +1,12 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Mutex } from "async-mutex";
 import { client } from "client/trpc";
-import { atom, useAtom, useSetAtom } from "jotai";
-import { identity, throttle, trim } from "lodash";
+import { atom, useAtom, useAtomValue, useSetAtom } from "jotai";
+import { identity, slice, throttle, trim } from "lodash";
+import { useRef } from "react";
 import { AdgProgress } from "smart";
 import { id } from "utils";
-import { appendAtom, clearAtom, State } from "./store";
+import { appendAtom, clearAtom, logAtom, State } from "./store";
 
 // ─── Input State ─────────────────────────────────────────────────────────────
 
@@ -46,6 +47,9 @@ export function useSolutionContents() {
 
 // ─── Run ─────────────────────────────────────────────────────────────────────
 
+export const bufferingAtom = atom<boolean>(false);
+export const useBuffering = () => useAtomValue(bufferingAtom);
+
 const mutex = new Mutex();
 
 export function useRun() {
@@ -55,66 +59,86 @@ export function useRun() {
   const { data: contents } = useSolutionContents();
   const append = useSetAtom(appendAtom);
   const clear = useSetAtom(clearAtom);
-  return useMutation({
-    mutationFn: () =>
-      mutex.runExclusive(async () => {
-        if (!mapFile || !scenarioFile || !solutionFile || !contents?.count)
-          return;
-        const options = {
-          agents: contents.count,
-          map: await mapFile.text(),
-          scen: await scenarioFile.text(),
-          paths: await solutionFile.text(),
-        };
-        let actions: State[] = [];
-        const f = throttle(
-          () => {
-            append(actions);
-            actions = [];
-          },
-          1500,
-          { trailing: true, leading: false }
-        );
-        let adg: AdgProgress | undefined = undefined;
-        return await new Promise<void>((res, rej) => {
-          clear();
-          const s = client.run.subscribe(options, {
-            onData: (data) => {
-              for (const d of data) {
-                if ("type" in d) {
-                  switch (d.type) {
-                    case "adg_progress":
-                      adg = d;
-                      break;
-                    case "tick":
-                      actions.push({ state: d, adg });
-                      f();
-                      break;
-                    case "error":
-                      console.error(d.error);
-                      rej(d.error);
-                      break;
+  const setLog = useSetAtom(logAtom);
+  const abort = useRef<() => void | null>();
+  const setBuffering = useSetAtom(bufferingAtom);
+  return {
+    abort,
+    mutation: useMutation({
+      mutationFn: () =>
+        mutex.runExclusive(async () => {
+          if (!mapFile || !scenarioFile || !solutionFile || !contents?.count)
+            return;
+          setBuffering(false);
+          const controller = new AbortController();
+          const options = {
+            agents: contents.count,
+            map: await mapFile.text(),
+            scen: await scenarioFile.text(),
+            paths: await solutionFile.text(),
+          };
+          let actions: State[] = [];
+          const f = throttle(
+            () => {
+              if (controller.signal.aborted) return;
+              append(actions);
+              actions = [];
+            },
+            1500,
+            { trailing: true, leading: false }
+          );
+          let adg: AdgProgress | undefined = undefined;
+          return await new Promise<void>((res, rej) => {
+            abort.current = () => {
+              controller.abort();
+              s.unsubscribe();
+              rej({ message: "Cancelled" });
+            };
+            clear();
+            const s = client.run.subscribe(options, {
+              onData: (data) => {
+                for (const d of data) {
+                  if ("type" in d) {
+                    switch (d.type) {
+                      case "message":
+                        setLog((t) => slice([...t, d.content], -100));
+                        break;
+                      case "adg_progress":
+                        adg = d;
+                        break;
+                      case "tick":
+                        actions.push({ state: d, adg });
+                        f();
+                        break;
+                      case "error":
+                        console.error(d.error);
+                        rej(d.error);
+                        break;
+                    }
                   }
                 }
-              }
-            },
-            onError: (error) => {
-              console.error(error);
-              rej(error);
-            },
-            onComplete: () => {
-              s.unsubscribe();
-              res();
-            },
+              },
+              signal: controller.signal,
+              onError: (error) => {
+                console.error(error);
+                s.unsubscribe();
+                rej(error);
+              },
+              onComplete: () => {
+                s.unsubscribe();
+                res();
+              },
+            });
           });
-        });
-      }),
-    mutationKey: [
-      "run",
-      contents?.count,
-      id(mapFile),
-      id(scenarioFile),
-      id(solutionFile),
-    ],
-  });
+        }),
+      onSettled: () => setBuffering(false),
+      mutationKey: [
+        "run",
+        contents?.count,
+        id(mapFile),
+        id(scenarioFile),
+        id(solutionFile),
+      ],
+    }),
+  };
 }

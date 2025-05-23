@@ -20,26 +20,36 @@ export function Inputs() {
   const [solutionFile, setSolutionFile] = useSolutionFile();
   const { data: contents } = useSolutionContents();
   const length = useLength();
-  const { mutateAsync: run, isPending: buffering } = useRun();
+  const {
+    mutation: { mutateAsync: run, isPending: buffering },
+    abort,
+  } = useRun();
   const submitDisabled = !(mapFile && scenarioFile && solutionFile);
 
-  useControls("Inputs", {
-    map: filePicker({
-      label: "Map file",
-      onChange: setMapFile,
-      accept: { "text/plain": [".map"] },
-    }),
-    scenario: filePicker({
-      label: "Scenario",
-      onChange: setScenarioFile,
-      accept: { "text/plain": [".scen"] },
-    }),
-    solution: filePicker({
-      label: "Solution",
-      onChange: setSolutionFile,
-      accept: { "text/plain": [] },
-    }),
-  });
+  useControls(
+    "Inputs",
+    {
+      map: filePicker({
+        label: "Map file",
+        onChange: setMapFile,
+        accept: { "text/plain": [".map"] },
+        disabled: buffering,
+      }),
+      scenario: filePicker({
+        label: "Scenario",
+        onChange: setScenarioFile,
+        accept: { "text/plain": [".scen"] },
+        disabled: buffering,
+      }),
+      solution: filePicker({
+        label: "Solution",
+        onChange: setSolutionFile,
+        accept: { "text/plain": [] },
+        disabled: buffering,
+      }),
+    },
+    [buffering]
+  );
 
   useControls(
     "Inputs",
@@ -58,8 +68,17 @@ export function Inputs() {
         ),
         label: buffering ? `Simulating (Step ${length})` : "Simulate",
       },
+      cancel: {
+        ...button(
+          () => {
+            abort.current?.();
+          },
+          { disabled: !buffering }
+        ),
+        label: "Stop",
+      },
     },
-    [length, buffering, contents?.count, submitDisabled]
+    [length, buffering, contents?.count, submitDisabled, abort]
   );
 
   return <Suspense fallback={null} />;

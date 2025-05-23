@@ -1,4 +1,5 @@
 import { speedAtom, useAutoplay, usePlaying, useSpeed } from "client/play";
+import { useBuffering } from "client/run";
 
 import { lengthAtom, timeAtom, useTime, useTimespan } from "client/store";
 import { button, useControls } from "leva";
@@ -12,6 +13,7 @@ export function Playback() {
   const [autoplay, setAutoplay] = useAutoplay();
   const [time, setTime] = useTime();
   const timespan = useTimespan();
+  const buffering = useBuffering();
 
   const [, set] = useControls(
     "Playback",
@@ -60,10 +62,13 @@ export function Playback() {
         ]) ?? 0;
       set({ time: next });
       setTime(next);
+      if (next && next === store.get(lengthAtom) && !buffering) {
+        setPlaying(false);
+      }
       ta = tb;
     }, frame);
     return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [playing]);
+  }, [playing, buffering]);
   return <Suspense fallback={null} />;
 }

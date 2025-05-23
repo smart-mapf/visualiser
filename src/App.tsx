@@ -5,6 +5,7 @@ import { Playback } from "Playback";
 import { Suspense } from "react";
 import "./App.css";
 import { Stage } from "./components/Stage";
+import { Logs } from "Logs";
 
 function App() {
   return (
@@ -13,6 +14,7 @@ function App() {
       <Suspense fallback={null}>
         <Inputs />
         <Playback />
+        <Logs />
       </Suspense>
       <div style={{ height: "100vh", width: "100vw" }}>
         <Leva

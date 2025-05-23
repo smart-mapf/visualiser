@@ -3,7 +3,7 @@ import { Mutex } from "async-mutex";
 import { clear, get, set } from "idb-keyval";
 import { atom, useAtom, useAtomValue, useSetAtom } from "jotai";
 import { selectAtom } from "jotai/utils";
-import { defer, floor, fromPairs, isEqual, round, throttle, zip } from "lodash";
+import { floor, fromPairs, isEqual, round, throttle, zip } from "lodash";
 import { store } from "main";
 import { useEffect, useMemo, useState } from "react";
 import { useEffectOnce } from "react-use";
@@ -17,6 +17,9 @@ export type State = {
   state: Step;
   adg?: AdgProgress;
 };
+
+export const logAtom = atom<string[]>([]);
+export const useLog = () => useAtom(logAtom);
 
 export const timeAtom = atom<number>(0);
 export const useTime = () => useAtom(timeAtom);
@@ -86,8 +89,8 @@ export const useAgentPosition = (i: number) => {
         () =>
           atom((get) => {
             const a = get(currentItemAtom);
-            if (!a) return;
-            const agent = a.state.agents[i];
+            const agent = a?.state?.agents?.[i];
+            if (!agent) return;
             return {
               constraints: a.adg?.constraints?.[i]?.constraining_agent,
               position: [agent.x + 0.5, 0, -agent.y - 0.5] as [
