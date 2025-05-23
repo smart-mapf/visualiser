@@ -69,7 +69,7 @@ export function useRun() {
         mutex.runExclusive(async () => {
           if (!mapFile || !scenarioFile || !solutionFile || !contents?.count)
             return;
-          setBuffering(false);
+          setBuffering(true);
           const controller = new AbortController();
           const options = {
             agents: contents.count,

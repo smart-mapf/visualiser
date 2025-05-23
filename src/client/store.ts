@@ -217,7 +217,7 @@ export function useAutoSyncChunks() {
   const time = useAtomValue(timeAtom);
   const setCache = useSetAtom(setCacheAtom);
   const b = useMemo(
-    () => throttle(setCache, 1000, { trailing: true, leading: false }),
+    () => throttle(setCache, 1000 / 15, { trailing: true, leading: false }),
     [setCache]
   );
   useEffect(() => {
