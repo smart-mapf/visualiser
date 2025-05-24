@@ -5,6 +5,7 @@ import {
   useSolutionFile,
   useRun,
   useSolutionContents,
+  useFlip,
 } from "client/run";
 import { useClear, useLength } from "client/store";
 import { useControls, button } from "leva";
@@ -25,6 +26,7 @@ export function Inputs() {
     abort,
   } = useRun();
   const submitDisabled = !(mapFile && scenarioFile && solutionFile);
+  const [flip, setFlip] = useFlip();
 
   useControls(
     "Inputs",
@@ -56,8 +58,13 @@ export function Inputs() {
         accept: { "text/plain": [] },
         disabled: buffering,
       }),
+      flip: {
+        label: "Flip X/Y",
+        value: flip,
+        onChange: setFlip,
+      },
     },
-    [buffering]
+    [buffering, flip]
   );
 
   useControls(

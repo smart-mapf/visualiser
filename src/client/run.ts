@@ -18,6 +18,9 @@ export const useMapFile = () => useAtom(mapFileAtom);
 export const useScenarioFile = () => useAtom(scenarioFileAtom);
 export const useSolutionFile = () => useAtom(solutionFileAtom);
 
+export const flipAtom = atom<boolean>(false);
+export const useFlip = () => useAtom(flipAtom);
+
 // ─── Computed ────────────────────────────────────────────────────────────────
 
 export function useSolutionContents() {
@@ -56,6 +59,7 @@ export function useRun() {
   const [mapFile] = useAtom(mapFileAtom);
   const [scenarioFile] = useAtom(scenarioFileAtom);
   const [solutionFile] = useAtom(solutionFileAtom);
+  const [flip] = useFlip();
   const { data: contents } = useSolutionContents();
   const append = useSetAtom(appendAtom);
   const clear = useSetAtom(clearAtom);
@@ -76,6 +80,7 @@ export function useRun() {
             map: await mapFile.text(),
             scen: await scenarioFile.text(),
             paths: await solutionFile.text(),
+            flipXY: flip,
           };
           let actions: State[] = [];
           const f = throttle(
@@ -97,7 +102,9 @@ export function useRun() {
             clear();
             const s = client.run.subscribe(options, {
               // Dodgy server sometimes outputs second option
-              onData: (a: { data: Output[], id: string } | [string, Output[], null]) => {
+              onData: (
+                a: { data: Output[]; id: string } | [string, Output[], null]
+              ) => {
                 const data = isArray(a) ? a[1] : a.data;
                 for (const d of data) {
                   if ("type" in d) {
