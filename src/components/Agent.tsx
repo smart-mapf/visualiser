@@ -128,7 +128,7 @@ export function Path({
                 dashScale={5}
                 depthTest={false}
                 lineWidth={s.scale.to((s) => s * 6)}
-                color="white"
+                color="black"
                 points={path}
                 dashed
               />

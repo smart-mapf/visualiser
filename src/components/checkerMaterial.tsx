@@ -8,40 +8,42 @@ import {
   Texture,
 } from "three";
 
-export const checkerMaterial = memoize((scale: number = 1) => {
-  const map = new Texture();
-  const material = new MeshStandardMaterial({
-    map,
-    color: new Color(0xffffff),
-    roughness: 0.5,
-    roughnessMap: new Texture(),
-  });
+export const checkerMaterial = memoize(
+  (scale: number = 1, materialOptions = {}) => {
+    const map = new Texture();
+    const material = new MeshStandardMaterial({
+      color: new Color(0xffffff),
+      roughness: 0.5,
+      ...materialOptions,
+      map,
+      roughnessMap: new Texture(),
+    });
 
-  // Setup texture tiling and filtering
-  map.wrapS = RepeatWrapping;
-  map.wrapT = RepeatWrapping;
-  map.magFilter = NearestFilter;
-  map.minFilter = NearestMipMapNearestFilter;
+    // Setup texture tiling and filtering
+    map.wrapS = RepeatWrapping;
+    map.wrapT = RepeatWrapping;
+    map.magFilter = NearestFilter;
+    map.minFilter = NearestMipMapNearestFilter;
 
-  material.onBeforeCompile = (shader) => {
-    // Add varyings
-    shader.vertexShader =
-      `
+    material.onBeforeCompile = (shader) => {
+      // Add varyings
+      shader.vertexShader =
+        `
       varying vec3 vWorldPosition;
       varying vec3 vWorldNormal;
     ` +
-      shader.vertexShader.replace(
-        "#include <worldpos_vertex>",
-        `
+        shader.vertexShader.replace(
+          "#include <worldpos_vertex>",
+          `
         #include <worldpos_vertex>
         vWorldPosition = worldPosition.xyz;
         vWorldNormal = normalize(round(normalMatrix * normal));
       `
-      );
+        );
 
-    // Add uniforms and function
-    shader.fragmentShader =
-      `
+      // Add uniforms and function
+      shader.fragmentShader =
+        `
       varying vec3 vWorldPosition;
       varying vec3 vWorldNormal;
       uniform float uTileScale;
@@ -73,35 +75,37 @@ export const checkerMaterial = memoize((scale: number = 1) => {
       }
 
       float sampleWorld(sampler2D tex, vec3 worldPos, vec3 normal, float scale) {
-        return noise(vec3(floor(worldPos.x * 64.0), floor(worldPos.y * 64.0), floor(worldPos.z * 64.0)));
+        return noise(vec3(floor(worldPos.x * 64.0 * scale), floor(worldPos.y * 64.0 * scale), floor(worldPos.z * 64.0 * scale)));
 }
     ` + shader.fragmentShader;
 
-    // Replace default UV-based sampling
-    shader.fragmentShader = shader.fragmentShader.replace(
-      "#include <map_fragment>",
-      `
+      // Replace default UV-based sampling
+      shader.fragmentShader = shader.fragmentShader.replace(
+        "#include <map_fragment>",
+        `
         float fac = sampleWorld(map, vWorldPosition, vWorldNormal, uTileScale);
         float fac2 = sampleWorld(map, vec3(vWorldPosition.x+1.0, vWorldPosition.y+1.0, vWorldPosition.z+1.0), vWorldNormal, uTileScale);
-        diffuseColor *= 0.8 + fac * 0.05;
+        diffuseColor *= 0.8 + fac * 0.1;
       `
-    );
+      );
 
-    // Replace roughness map sampling
-    shader.fragmentShader = shader.fragmentShader.replace(
-      "#include <roughnessmap_fragment>",
-      `
+      // Replace roughness map sampling
+      shader.fragmentShader = shader.fragmentShader.replace(
+        "#include <roughnessmap_fragment>",
+        `
       float roughnessFactor = 0.5;
       #ifdef USE_ROUGHNESSMAP
-        roughnessFactor *= 0.6 + fac2 * 0.2;
+        roughnessFactor *= 0.6 + fac2 * 0.4;
       #endif
     `
-    );
+      );
 
-    // Uniform for tile scale
-    shader.uniforms.uTileScale = { value: scale };
-    material.userData.shader = shader;
-  };
+      // Uniform for tile scale
+      shader.uniforms.uTileScale = { value: scale };
+      material.userData.shader = shader;
+    };
 
-  return material;
-});
+    return material;
+  },
+  JSON.stringify
+);

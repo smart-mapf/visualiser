@@ -1,16 +1,17 @@
 import { Grid, Instance, Instances, useTexture } from "@react-three/drei";
 import { useModel } from "hooks/useModel";
-import { memo, ReactNode } from "react";
+import { memo, ReactNode, Suspense } from "react";
 import {
+  DoubleSide,
   LinearMipmapNearestFilter,
   NearestFilter,
   RepeatWrapping,
   Vector2,
 } from "three";
 
+import { useThree } from "@react-three/fiber";
 import "./checkerMaterial";
 import { checkerMaterial } from "./checkerMaterial";
-import { useThree } from "@react-three/fiber";
 
 const Obstacles = memo(
   ({
@@ -21,7 +22,7 @@ const Obstacles = memo(
     const { geometry: hull } = useModel("./box-hull.gltf");
     const roughness = useTexture("/tile-roughness.png", (t) => {
       t.anisotropy = gl.capabilities.getMaxAnisotropy();
-      t.repeat = new Vector2(width, height);
+      t.repeat = new Vector2(width * 2, height * 2);
       t.wrapS = RepeatWrapping;
       t.wrapT = RepeatWrapping;
       t.minFilter = LinearMipmapNearestFilter;
@@ -29,7 +30,7 @@ const Obstacles = memo(
     });
     const texture = useTexture("/tile.png", (t) => {
       t.anisotropy = gl.capabilities.getMaxAnisotropy();
-      t.repeat = new Vector2(width, height);
+      t.repeat = new Vector2(width * 2, height * 2);
       t.wrapS = RepeatWrapping;
       t.wrapT = RepeatWrapping;
       t.minFilter = LinearMipmapNearestFilter;
@@ -38,17 +39,17 @@ const Obstacles = memo(
     return (
       <group>
         <Instances
-          scale={[-1, 1, -1]}
+          scale={[-1, 0.5, -1]}
           rotation={[0, Math.PI / 2, 0]}
           limit={items?.length ?? 0}
           castShadow
           position={[height / 2, 0, -width / 2]}
-          material={checkerMaterial(4)}
+          material={checkerMaterial(1)}
         >
           <boxGeometry />
           {items?.map?.((item, i) => (
             <Instance
-              color="#444"
+              color="#555"
               key={i}
               scale={[item.width, 0.5, item.height]}
               position={[
@@ -60,17 +61,16 @@ const Obstacles = memo(
           ))}
         </Instances>
         <mesh
-          receiveShadow
           geometry={hull}
           rotation={[0, Math.PI / 2, 0]}
           scale={[width / 2, 0.3, height / 2]}
           position={[0, -0.3, 0]}
         >
-          <meshStandardMaterial color="#666" />
+          <meshStandardMaterial color="#666" side={DoubleSide} />
         </mesh>
         <mesh receiveShadow rotation={[-Math.PI / 2, 0, -Math.PI / 2]}>
           <meshStandardMaterial
-            color="#AAA"
+            color="#ccc"
             map={texture}
             roughnessMap={roughness}
           />
@@ -103,17 +103,25 @@ export function Domain({
 } & DomainProps) {
   return (
     <>
-      {items.length ? (
-        <Obstacles items={items} size={size} />
-      ) : (
-        <Grid args={[10, 10]} />
-      )}
-      <group
-        scale={[1, 1, 1]}
-        position={[(size?.height ?? 0) / 2 - 1, 0, -(size?.width ?? 0) / 2 + 1]}
-      >
-        {children}
-      </group>
+      <Grid
+        position={[0, -0.6, 0]}
+        args={[4096, 4096]}
+        cellColor={"#aaa"}
+        sectionColor={"#ccc"}
+      />
+      <Suspense fallback={null}>
+        {items.length && <Obstacles items={items} size={size} />}
+        <group
+          scale={[1, 1, 1]}
+          position={[
+            (size?.height ?? 0) / 2 - 1,
+            0,
+            -(size?.width ?? 0) / 2 + 1,
+          ]}
+        >
+          {children}
+        </group>
+      </Suspense>
     </>
   );
 }

@@ -29,11 +29,12 @@ export function Agents() {
       <Instances
         frustumCulled={false}
         castShadow
+        receiveShadow
         geometry={geometry}
         material={material}
       >
         {range(contents?.count ?? 0).map((i) => (
-          <group position={[0, 0.05, 0]}>
+          <group position={[0, 0.1, 0]}>
             <Agent i={i} key={i} scale={2} />
           </group>
         ))}

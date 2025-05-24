@@ -35,7 +35,7 @@ export function Light() {
         ref={light}
         color="#fff2d9"
         castShadow
-        shadow-bias={0.0001}
+        shadow-bias={-0.0001}
         shadow-mapSize={[2048 * 1.5, 2048 * 1.5]}
         intensity={4}
       />
