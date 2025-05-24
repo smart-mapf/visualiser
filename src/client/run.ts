@@ -25,8 +25,9 @@ export const useFlip = () => useAtom(flipAtom);
 
 export function useSolutionContents() {
   const [file] = useSolutionFile();
+  const [flip] = useFlip();
   return useQuery({
-    queryKey: ["solution", id(file)],
+    queryKey: ["solution", id(file), flip],
     queryFn: async () => {
       if (!file) return;
       const text = await file.text();
@@ -39,7 +40,7 @@ export function useSolutionContents() {
           const pairs = p.split("->");
           return pairs.filter(identity).map((p) => {
             const [x, y] = trim(p, "()").split(",");
-            return { x: +x, y: +y };
+            return flip ? { x: +x, y: +y } : { x: +y, y: +x };
           });
         }),
       };
