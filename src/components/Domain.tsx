@@ -10,14 +10,17 @@ import {
 
 import "./checkerMaterial";
 import { checkerMaterial } from "./checkerMaterial";
+import { useThree } from "@react-three/fiber";
 
 const Obstacles = memo(
   ({
     items,
     size: { width, height } = { width: 0, height: 0 },
   }: DomainProps) => {
+    const { gl } = useThree();
     const { geometry: hull } = useModel("./box-hull.gltf");
     const roughness = useTexture("/tile-roughness.png", (t) => {
+      t.anisotropy = gl.capabilities.getMaxAnisotropy();
       t.repeat = new Vector2(width, height);
       t.wrapS = RepeatWrapping;
       t.wrapT = RepeatWrapping;
@@ -25,6 +28,7 @@ const Obstacles = memo(
       t.magFilter = NearestFilter;
     });
     const texture = useTexture("/tile.png", (t) => {
+      t.anisotropy = gl.capabilities.getMaxAnisotropy();
       t.repeat = new Vector2(width, height);
       t.wrapS = RepeatWrapping;
       t.wrapT = RepeatWrapping;

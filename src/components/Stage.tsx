@@ -3,11 +3,18 @@ import { Canvas } from "@react-three/fiber";
 import { CameraControls } from "./CameraControls";
 import { Contents } from "./Contents";
 import { Light } from "./Light";
+import { ACESFilmicToneMapping } from "three";
 
 export function Stage() {
   return (
     <Canvas
       shadows
+      dpr={[1, 1.5]}
+      gl={{
+        antialias: false,
+        powerPreference: "high-performance",
+        toneMapping: ACESFilmicToneMapping,
+      }}
       camera={{
         position: [0, 5, 10],
       }}
