@@ -19,8 +19,9 @@ export function CameraControls() {
   return (
     <OrbitControls
       ref={controlsRef}
+      dampingFactor={0.4}
       minPolarAngle={0}
-      maxPolarAngle={Math.PI / 2.25}
+      maxPolarAngle={Math.PI / 2.1}
     />
   );
 }

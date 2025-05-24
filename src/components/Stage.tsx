@@ -1,4 +1,4 @@
-import { Sky } from "@react-three/drei";
+import { GizmoHelper, GizmoViewport, Sky } from "@react-three/drei";
 import { Canvas } from "@react-three/fiber";
 import { CameraControls } from "./CameraControls";
 import { Contents } from "./Contents";
@@ -12,12 +12,15 @@ export function Stage() {
         position: [0, 5, 10],
       }}
     >
-      <fog attach="fog" args={["#eff2f3", 0, 200]} />
+      <fog attach="fog" args={["#eff2f3", 0, 100]} />
       <color attach="background" args={["#afc3cc"]} />
       <Light />
       <Sky inclination={0.52} sunPosition={[100, 100, 50]} />
       <CameraControls />
       <Contents />
+      <GizmoHelper alignment="bottom-left">
+        <GizmoViewport />
+      </GizmoHelper>
     </Canvas>
   );
 }
