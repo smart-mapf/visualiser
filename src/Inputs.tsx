@@ -62,6 +62,7 @@ export function Inputs() {
         label: "Flip X/Y",
         value: flip,
         onChange: setFlip,
+        disabled: buffering,
       },
     },
     [buffering, flip]
