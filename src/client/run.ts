@@ -2,9 +2,9 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { Mutex } from "async-mutex";
 import { client } from "client/trpc";
 import { atom, useAtom, useAtomValue, useSetAtom } from "jotai";
-import { identity, slice, throttle, trim } from "lodash";
+import { identity, isArray, slice, throttle, trim } from "lodash";
 import { useRef } from "react";
-import { AdgProgress } from "smart";
+import { AdgProgress, Output } from "smart";
 import { id } from "utils";
 import { appendAtom, clearAtom, logAtom, State } from "./store";
 
@@ -96,7 +96,9 @@ export function useRun() {
             };
             clear();
             const s = client.run.subscribe(options, {
-              onData: ({ data }) => {
+              // Dodgy server sometimes outputs second option
+              onData: (a: { data: Output[], id: string } | [string, Output[], null]) => {
+                const data = isArray(a) ? a[1] : a.data;
                 for (const d of data) {
                   if ("type" in d) {
                     switch (d.type) {

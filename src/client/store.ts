@@ -11,7 +11,7 @@ import { AdgProgress, Step } from "smart";
 import { lerp, lerpRadians } from "utils";
 import { useSpeed } from "./play";
 
-const CHUNK_SIZE = 512;
+const CHUNK_SIZE = 256;
 
 export type State = {
   state: Step;
@@ -32,7 +32,7 @@ export const roundedTimeSmoothAtom = selectAtom(timeSmoothAtom, (v) =>
 );
 
 const currentCacheSetAtom = selectAtom(
-  timeSmoothAtom,
+  timeAtom,
   (t) => {
     const t0 = floor(t / CHUNK_SIZE);
     return [t0 - 1, t0, t0 + 1].filter((i) => i >= 0);
@@ -51,7 +51,7 @@ const setCacheAtom = atom(null, async (get, set) => {
   const cs = get(currentCacheSetAtom);
   const load = async (i: number) => {
     const p = prev[i];
-    if (p && p.source === "storage") return p;
+    if (p && p.source === "storage" && p.state.length) return p;
     const c = cache[i];
     if (c) return { source: "cache" as const, state: c.state };
     return {
@@ -171,7 +171,6 @@ export const appendAtom = atom<null, [State[]], unknown>(
         finaliseChunk(i, chunk.state);
       }
     }
-    set(setCacheAtom);
     set(timespanAtom, (t) => t + items.length);
     set(lengthAtom, (l) => l + items.length);
   }
@@ -215,14 +214,26 @@ export const useLength = () => {
 
 export function useAutoSyncChunks() {
   const time = useAtomValue(timeAtom);
+  const length = useAtomValue(lengthAtom);
   const setCache = useSetAtom(setCacheAtom);
+  const c = useMemo(() => {
+    let running = false;
+    return async () => {
+      if (running) return;
+      running = true;
+      await setCache();
+      running = false;
+    }
+  }, [setCache])
   const b = useMemo(
-    () => throttle(setCache, 1000 / 15, { trailing: true, leading: false }),
-    [setCache]
+    () => throttle(() => {
+      c()
+    }, 1000 / 15, { trailing: true, leading: false }),
+    [c]
   );
   useEffect(() => {
     b();
-  }, [time, b]);
+  }, [length, time, b]);
 }
 
 export function useTimeSmoothService() {
