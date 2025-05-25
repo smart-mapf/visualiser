@@ -3,13 +3,23 @@ import { Mutex } from "async-mutex";
 import { clear, get, set } from "idb-keyval";
 import { atom, useAtom, useAtomValue, useSetAtom } from "jotai";
 import { selectAtom } from "jotai/utils";
-import { floor, fromPairs, isEqual, round, throttle, zip } from "lodash";
+import {
+  each,
+  floor,
+  fromPairs,
+  isEqual,
+  isUndefined,
+  round,
+  throttle,
+  zip,
+} from "lodash";
 import { store } from "main";
 import { useEffect, useMemo, useState } from "react";
 import { useEffectOnce } from "react-use";
 import { AdgProgress, Step } from "smart";
 import { lerp, lerpRadians } from "utils";
 import { useSpeed } from "./play";
+import { selectionAtom } from "./selection";
 
 const CHUNK_SIZE = 256;
 
@@ -76,7 +86,7 @@ export function usePreviousDefined<T>(t?: T) {
   useEffect(() => {
     if (t) setPrev(t);
   }, [t]);
-  return prev;
+  return { value: prev, current: t, isPrevious: isUndefined(t) && prev === t };
 }
 
 const alpha = (n: number) => 0.1 - 1 / (0.1 * n + 1) + 1;
@@ -104,7 +114,7 @@ export const useAgentInfo = (i: number) => {
       )
     )
   );
-}
+};
 
 function dist(a: [number, number, number], b: [number, number, number]) {
   return Math.sqrt(
@@ -113,7 +123,7 @@ function dist(a: [number, number, number], b: [number, number, number]) {
 }
 
 export const useAgentPosition = (i: number) => {
-  const v0 = useAgentInfo(i);
+  const { value: v0, isPrevious } = useAgentInfo(i);
   const [speed] = useSpeed();
   const [current, setCurrent] = useState(v0);
   useFrame(() => {
@@ -136,7 +146,7 @@ export const useAgentPosition = (i: number) => {
       });
     }
   });
-  return current;
+  return { current, isPrevious };
 };
 
 // Load chunk by index
@@ -180,12 +190,17 @@ export const appendAtom = atom<null, [State[]], unknown>(
 export const clearAtom = atom<null, never[], unknown>(null, (_get, set) => {
   // Don't wait for this to complete
   m.runExclusive(async () => {
+    each(cache, (v, k) => {
+      delete cache[+k];
+    });
+    set(cacheAtom, {});
+    set(timeAtom, 0);
+    set(selectionAtom, new Set());
+    set(lengthAtom, 0);
+    set(timespanAtom, 0);
     await clear();
+    await set(setCacheAtom);
   }, 0);
-  set(cacheAtom, {});
-  set(timeAtom, 0);
-  set(lengthAtom, 0);
-  set(timespanAtom, 0);
 });
 
 export const useAppend = () => {
@@ -223,12 +238,17 @@ export function useAutoSyncChunks() {
       running = true;
       await setCache();
       running = false;
-    }
-  }, [setCache])
+    };
+  }, [setCache]);
   const b = useMemo(
-    () => throttle(() => {
-      c()
-    }, 1000 / 15, { trailing: true, leading: false }),
+    () =>
+      throttle(
+        () => {
+          c();
+        },
+        1000 / 15,
+        { trailing: true, leading: false }
+      ),
     [c]
   );
   useEffect(() => {

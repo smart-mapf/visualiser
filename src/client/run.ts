@@ -45,7 +45,6 @@ export function useSolutionContents() {
         }),
       };
     },
-    enabled: !!file,
   });
 }
 
@@ -112,6 +111,9 @@ export function useRun() {
                     switch (d.type) {
                       case "message":
                         setLog((t) => slice([...t, d.content], -100));
+                        break;
+                      case "adg_error":
+                        setLog((t) => [...t, `ADG Error: ${d.info}`]);
                         break;
                       case "adg_progress":
                         adg = d;

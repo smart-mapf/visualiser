@@ -32,8 +32,12 @@ function Constraint({
   from?: number;
   to?: number;
 } & Partial<ComponentProps<typeof AnimatedLine>>) {
-  const { position: a = [0, 0, 0] as const } = useAgentPosition(from) ?? {};
-  const { position: b = [0, 0, 0] as const } = useAgentPosition(to) ?? {};
+  const {
+    current: { position: a = [0, 0, 0] as [number, number, number] } = {},
+  } = useAgentPosition(from) ?? {};
+  const {
+    current: { position: b = [0, 0, 0] as [number, number, number] } = {},
+  } = useAgentPosition(to) ?? {};
 
   const springs = useSpring({
     from: { offset: 0 },
@@ -90,7 +94,7 @@ export function Path({
   const src = head(path);
   const dest = last(path);
 
-  const a = useAgentPosition(id);
+  const { current: a } = useAgentPosition(id);
 
   const constrained = !!a?.constraints?.length;
 
@@ -191,7 +195,7 @@ export function Agent({ i, ...props }: { i: number } & InstanceProps) {
   const [selected, toggleSelected] = useSelection();
   const [hovered, toggleHovered] = useBoolean(false);
 
-  const a = useAgentPosition(i);
+  const { current: a } = useAgentPosition(i);
 
   if (!a) {
     return undefined;

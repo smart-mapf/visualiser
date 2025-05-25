@@ -41,7 +41,7 @@ function Dot({ color }: { color: string }) {
 }
 
 export function Status({ id }: { id: number }) {
-  const a = useAgentInfo(id);
+  const { value: a } = useAgentInfo(id);
   const cls = useCss({
     display: "flex",
     flexDirection: "column",
