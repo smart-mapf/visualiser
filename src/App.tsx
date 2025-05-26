@@ -1,18 +1,20 @@
-import { Service } from "client/store";
-import { Inputs } from "Inputs";
+import { Service } from "client/state";
+import { Inputs } from "leva-controls/Inputs";
 import { Leva } from "leva";
-import { Playback } from "Playback";
+import { Playback } from "leva-controls/Playback";
 import { Suspense } from "react";
 import "./App.css";
 import { Stage } from "./components/Stage";
 import { Logs } from "Logs";
-import { Selection } from "Selection";
+import { Selection } from "leva-controls/Selection";
+import { Examples } from "leva-controls/Examples";
 
 function App() {
   return (
     <Suspense fallback={null}>
       <Service />
       <Suspense fallback={null}>
+        <Examples />
         <Inputs />
         <Playback />
         <Selection />

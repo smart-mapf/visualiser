@@ -1,9 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
+import { basename, id } from "utils";
 import { optimiseGridMap } from "utils/optimiseGridMap";
 import { parseMap } from "utils/parseMap";
-import { id } from "utils";
 
-export function useMap(file: File | null) {
+export function useMap(file?: File | null) {
   return useQuery({
     queryKey: ["map", id(file)],
     queryFn: async () => {
@@ -19,5 +19,20 @@ export function useMap(file: File | null) {
       };
     },
     enabled: !!file,
+    staleTime: Infinity,
+  });
+}
+
+export const sizes = [20, 50, 100, 500] as const;
+
+export function useFile(path: string) {
+  return useQuery({
+    queryKey: ["file", path],
+    queryFn: async () => {
+      const a = await fetch(path);
+      return new File([await a.blob()], basename(path), {});
+    },
+    enabled: !!path,
+    staleTime: Infinity,
   });
 }

@@ -7,11 +7,12 @@ import {
   useSolutionContents,
   useFlip,
 } from "client/run";
-import { useClear, useLength } from "client/store";
+import { useClear, useLength } from "client/state";
 import { useControls, button } from "leva";
 import { filePicker } from "leva-file-picker";
-import { store } from "main";
+import { store } from "store";
 import { Suspense } from "react";
+import { file } from "leva-plugins/file";
 
 export function Inputs() {
   const [, setPlaying] = usePlaying();
@@ -31,27 +32,30 @@ export function Inputs() {
   useControls(
     "Inputs",
     {
-      map: filePicker({
+      map: file({
         label: "Map file",
-        onChange: (f) => {
+        defaultValue: mapFile,
+        onAccept: (f) => {
           if (!f) clear();
           setMapFile(f);
         },
         accept: { "text/plain": [".map"] },
         disabled: buffering,
       }),
-      scenario: filePicker({
+      scenario: file({
         label: "Scenario",
-        onChange: (f) => {
+        defaultValue: scenarioFile,
+        onAccept: (f) => {
           if (!f) clear();
           setScenarioFile(f);
         },
         accept: { "text/plain": [".scen"] },
         disabled: buffering,
       }),
-      solution: filePicker({
+      solution: file({
         label: "Solution",
-        onChange: (f) => {
+        defaultValue: solutionFile,
+        onAccept: (f) => {
           if (!f) clear();
           setSolutionFile(f);
         },
@@ -65,11 +69,11 @@ export function Inputs() {
         disabled: buffering,
       },
     },
-    [buffering, flip]
+    [buffering, flip, mapFile, scenarioFile, solutionFile]
   );
 
   useControls(
-    "Inputs",
+    "Run",
     {
       submit: {
         ...button(
@@ -83,7 +87,13 @@ export function Inputs() {
             disabled: !contents?.count || submitDisabled || buffering,
           }
         ),
-        label: buffering ? `Simulating (Step ${length})` : "Simulate",
+        label: buffering
+          ? `Simulating (Step ${length})`
+          : contents?.count
+          ? `Simulate (${contents.count} ${
+              contents.count === 1 ? "agent" : "agents"
+            })`
+          : "Simulate",
       },
       cancel: {
         ...button(

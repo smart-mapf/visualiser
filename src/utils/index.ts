@@ -4,6 +4,12 @@ export function id(file?: File | null) {
   return JSON.stringify(pick(file, "lastModified", "name", "size"));
 }
 
+export const basename = (path: string, noExtension = false) => {
+  const parts = path.split("/");
+  const name = parts[parts.length - 1];
+  return noExtension ? name.split(".")[0] : name;
+};
+
 export const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 
 export function lerpRadians(a: number, b: number, t: number) {

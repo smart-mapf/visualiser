@@ -6,7 +6,7 @@ import { identity, isArray, slice, throttle, trim } from "lodash";
 import { useRef } from "react";
 import { AdgProgress, Output } from "smart";
 import { id } from "utils";
-import { appendAtom, clearAtom, logAtom, State } from "./store";
+import { appendAtom, clearAtom, logAtom, State } from "./state";
 
 // ─── Input State ─────────────────────────────────────────────────────────────
 
@@ -29,7 +29,7 @@ export function useSolutionContents() {
   return useQuery({
     queryKey: ["solution", id(file), flip],
     queryFn: async () => {
-      if (!file) return;
+      if (!file) return null;
       const text = await file.text();
       const lines = trim(text).split("\n");
       return {

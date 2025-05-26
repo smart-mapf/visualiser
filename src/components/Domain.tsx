@@ -2,7 +2,6 @@ import { Grid, Instance, Instances, useTexture } from "@react-three/drei";
 import { useModel } from "hooks/useModel";
 import { memo, ReactNode, Suspense } from "react";
 import {
-  DoubleSide,
   LinearMipmapNearestFilter,
   NearestFilter,
   RepeatWrapping,
@@ -49,7 +48,7 @@ const Obstacles = memo(
           <boxGeometry />
           {items?.map?.((item, i) => (
             <Instance
-              color="#555"
+              color="#ccc"
               key={i}
               scale={[item.width, 0.5, item.height]}
               position={[
@@ -66,7 +65,7 @@ const Obstacles = memo(
           scale={[width / 2, 0.3, height / 2]}
           position={[0, -0.3, 0]}
         >
-          <meshStandardMaterial color="#666" side={DoubleSide} />
+          <meshStandardMaterial color="#666" />
         </mesh>
         <mesh receiveShadow rotation={[-Math.PI / 2, 0, -Math.PI / 2]}>
           <meshStandardMaterial
@@ -106,11 +105,11 @@ export function Domain({
       <Grid
         position={[0, -0.6, 0]}
         args={[4096, 4096]}
-        cellColor={"#aaa"}
-        sectionColor={"#ccc"}
+        cellColor={"#666"}
+        sectionColor={"#666"}
       />
       <Suspense fallback={null}>
-        {items.length && <Obstacles items={items} size={size} />}
+        {size && <Obstacles items={items} size={size} />}
         <group
           scale={[1, 1, 1]}
           position={[

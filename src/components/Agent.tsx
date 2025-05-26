@@ -10,7 +10,7 @@ import {
 } from "@react-three/drei";
 import { useSolutionContents } from "client/run";
 import { useSelection } from "client/selection";
-import { useAgentPosition } from "client/store";
+import { useAgentPosition } from "client/state";
 import { head, last, thru } from "lodash";
 import { ComponentProps, Suspense } from "react";
 import { useBoolean, useTween } from "react-use";
@@ -119,7 +119,7 @@ export function Path({
                   font={font}
                   renderOrder={9999}
                   fillOpacity={s.scale}
-                  color="black"
+                  color="#181c20"
                   anchorX="center"
                   anchorY="middle"
                   fontSize={0.13}
@@ -132,7 +132,7 @@ export function Path({
                 dashScale={5}
                 depthTest={false}
                 lineWidth={s.scale.to((s) => s * 6)}
-                color="black"
+                color="#fff"
                 points={path}
                 dashed
               />

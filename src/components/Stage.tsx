@@ -19,10 +19,10 @@ export function Stage() {
         position: [0, 5, 10],
       }}
     >
-      <fog attach="fog" args={["#eff2f3", 20, 100]} />
-      <color attach="background" args={["#afc3cc"]} />
+      <fog attach="fog" args={["#181c20", 20, 100]} />
+      <color attach="background" args={["#181c20"]} />
       <Light />
-      <Sky inclination={0.52} sunPosition={[100, 100, 50]} />
+      {/* <Sky inclination={0.52} sunPosition={[100, 100, 50]} /> */}
       <CameraControls />
       <Contents />
       <GizmoHelper alignment="bottom-left">

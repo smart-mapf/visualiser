@@ -2,7 +2,7 @@ import { Instances, useGLTF, useTexture } from "@react-three/drei";
 import { useModel } from "hooks/useModel";
 import { range } from "lodash";
 import { Suspense, useMemo } from "react";
-import { MeshStandardMaterial } from "three";
+import { MeshPhysicalMaterial, MeshStandardMaterial } from "three";
 import { Agent } from "./Agent";
 import { useSolutionContents } from "client/run";
 
@@ -15,10 +15,13 @@ export function Agents() {
 
   const material = useMemo(() => {
     texture.flipY = false;
-    return new MeshStandardMaterial({
+    return new MeshPhysicalMaterial({
       map: texture,
       roughness: 0.5,
       metalness: 0,
+      sheenColor: "#fff",
+      sheenRoughness: 0.1,
+      sheen: 1,
     });
   }, [texture]);
 

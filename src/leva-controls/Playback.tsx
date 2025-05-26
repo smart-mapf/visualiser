@@ -1,10 +1,10 @@
 import { speedAtom, useAutoplay, usePlaying, useSpeed } from "client/play";
 import { bufferingAtom } from "client/run";
 
-import { lengthAtom, timeAtom, useTime, useTimespan } from "client/store";
+import { lengthAtom, timeAtom, useTime, useTimespan } from "client/state";
 import { button, useControls } from "leva";
 import { max, min, now, round } from "lodash";
-import { store } from "main";
+import { store } from "store";
 import { Suspense, useEffect } from "react";
 
 export function Playback() {

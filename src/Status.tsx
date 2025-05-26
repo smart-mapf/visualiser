@@ -1,4 +1,4 @@
-import { useAgentInfo } from "client/store";
+import { useAgentInfo } from "client/state";
 import { Components } from "leva/plugin";
 import { chain, noop } from "lodash";
 import { useCss } from "react-use";

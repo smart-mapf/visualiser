@@ -13,7 +13,7 @@ import {
   throttle,
   zip,
 } from "lodash";
-import { store } from "main";
+import { store } from "store";
 import { useEffect, useMemo, useState } from "react";
 import { useEffectOnce } from "react-use";
 import { AdgProgress, Step } from "smart";

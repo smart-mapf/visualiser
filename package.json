@@ -30,6 +30,7 @@
     "postprocessing": "^6.37.3",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
+    "react-dropzone": "^14.3.8",
     "react-spring": "^10.0.0",
     "react-use": "^17.6.0",
     "smart-service": "workspace:*",
