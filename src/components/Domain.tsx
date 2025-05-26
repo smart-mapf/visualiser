@@ -65,7 +65,7 @@ const Obstacles = memo(
           scale={[width / 2, 0.3, height / 2]}
           position={[0, -0.3, 0]}
         >
-          <meshStandardMaterial color="#666" />
+          <meshStandardMaterial color="#393e4d" />
         </mesh>
         <mesh receiveShadow rotation={[-Math.PI / 2, 0, -Math.PI / 2]}>
           <meshStandardMaterial
