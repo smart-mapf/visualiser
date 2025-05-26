@@ -4,6 +4,7 @@ import { useControls } from "leva";
 import { jsx } from "leva-plugins/jsx";
 import { keys } from "lodash";
 import { client } from "queryClient";
+import { basename } from "utils";
 
 const maps = import.meta.glob("/public/examples/*.map", {
   query: "?url",
@@ -16,7 +17,7 @@ export function Examples() {
       value: (
         <QueryClientProvider client={client}>
           {keys(maps).map((k) => (
-            <Example path={k} />
+            <Example path={`/examples/${basename(k)}`} />
           ))}
         </QueryClientProvider>
       ),
