@@ -1,18 +1,17 @@
-import { usePlaying, autoplayAtom } from "client/play";
+import { autoplayAtom, usePlaying } from "client/play";
 import {
-  useMapFile,
-  useScenarioFile,
-  useSolutionFile,
-  useRun,
-  useSolutionContents,
   useFlip,
+  useMapFile,
+  useRun,
+  useScenarioFile,
+  useSolutionContents,
+  useSolutionFile,
 } from "client/run";
 import { useClear, useLength } from "client/state";
-import { useControls, button } from "leva";
-import { filePicker } from "leva-file-picker";
-import { store } from "store";
-import { Suspense } from "react";
+import { button, useControls } from "leva";
 import { file } from "leva-plugins/file";
+import { Suspense } from "react";
+import { store } from "store";
 
 export function Inputs() {
   const [, setPlaying] = usePlaying();

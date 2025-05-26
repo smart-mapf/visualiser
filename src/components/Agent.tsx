@@ -14,8 +14,8 @@ import { useAgentPosition } from "client/state";
 import { head, last, thru } from "lodash";
 import { ComponentProps, Suspense } from "react";
 import { useBoolean, useTween } from "react-use";
-import { rectangleRounded } from "./rectangleRounded";
 import { DoubleSide } from "three";
+import { rectangleRounded } from "./rectangleRounded";
 
 const font = `./fonts/geist-medium.ttf`;
 

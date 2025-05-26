@@ -1,9 +1,9 @@
-import { GizmoHelper, GizmoViewport, Sky } from "@react-three/drei";
+import { GizmoHelper, GizmoViewport } from "@react-three/drei";
 import { Canvas } from "@react-three/fiber";
+import { ACESFilmicToneMapping } from "three";
 import { CameraControls } from "./CameraControls";
 import { Contents } from "./Contents";
 import { Light } from "./Light";
-import { ACESFilmicToneMapping } from "three";
 
 export function Stage() {
   return (

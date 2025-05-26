@@ -1,10 +1,10 @@
 import { Instances, useGLTF, useTexture } from "@react-three/drei";
+import { useSolutionContents } from "client/run";
 import { useModel } from "hooks/useModel";
 import { range } from "lodash";
 import { Suspense, useMemo } from "react";
-import { MeshPhysicalMaterial, MeshStandardMaterial } from "three";
+import { MeshPhysicalMaterial } from "three";
 import { Agent } from "./Agent";
-import { useSolutionContents } from "client/run";
 
 useGLTF.preload("./robot-final.gltf");
 useTexture.preload("./base.png");
