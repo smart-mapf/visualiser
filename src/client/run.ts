@@ -2,7 +2,17 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { Mutex } from "async-mutex";
 import { client } from "client/trpc";
 import { atom, useAtom, useAtomValue, useSetAtom } from "jotai";
-import { identity, isArray, slice, throttle, trim } from "lodash";
+import {
+  clone,
+  cloneDeep,
+  identity,
+  isArray,
+  isNumber,
+  range,
+  slice,
+  throttle,
+  trim,
+} from "lodash";
 import { useRef } from "react";
 import { AdgProgress, Output } from "smart";
 import { id } from "utils";
@@ -92,6 +102,7 @@ export function useRun() {
             1500,
             { trailing: true, leading: false }
           );
+          const agentState: State["agentState"] = {};
           let adg: AdgProgress | undefined = undefined;
           return await new Promise<void>((res, rej) => {
             abort.current = () => {
@@ -109,6 +120,17 @@ export function useRun() {
                 for (const d of data) {
                   if ("type" in d) {
                     switch (d.type) {
+                      case "state_change":
+                        if (isNumber(d.agent)) {
+                          console.log(d.agent, d.value);
+                          agentState[d.agent] = d.value;
+                          console.log(structuredClone(agentState));
+                        } else {
+                          range(contents.count).forEach((i) => {
+                            agentState[i] = d.value;
+                          });
+                        }
+                        break;
                       case "message":
                         setLog((t) => slice([...t, d.content], -100));
                         break;
@@ -119,7 +141,11 @@ export function useRun() {
                         adg = d;
                         break;
                       case "tick":
-                        actions.push({ state: d, adg });
+                        actions.push({
+                          state: d,
+                          adg,
+                          agentState: structuredClone(agentState),
+                        });
                         f();
                         break;
                       case "error":

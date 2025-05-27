@@ -1,12 +1,7 @@
 import { Grid, Instance, Instances, useTexture } from "@react-three/drei";
 import { useModel } from "hooks/useModel";
 import { memo, ReactNode, Suspense } from "react";
-import {
-  LinearMipmapNearestFilter,
-  NearestFilter,
-  RepeatWrapping,
-  Vector2,
-} from "three";
+import { NearestFilter, RepeatWrapping, Vector2 } from "three";
 
 import { useThree } from "@react-three/fiber";
 import "./checkerMaterial";
@@ -21,10 +16,11 @@ const Obstacles = memo(
     const { geometry: hull } = useModel("./box-hull.gltf");
     const roughness = useTexture("/tile-roughness.png", (t) => {
       t.anisotropy = gl.capabilities.getMaxAnisotropy();
+      console.log(gl.capabilities.getMaxAnisotropy());
       t.repeat = new Vector2(width * 2, height * 2);
       t.wrapS = RepeatWrapping;
       t.wrapT = RepeatWrapping;
-      t.minFilter = LinearMipmapNearestFilter;
+      t.minFilter = NearestFilter;
       t.magFilter = NearestFilter;
     });
     const texture = useTexture("/tile.png", (t) => {
@@ -32,7 +28,7 @@ const Obstacles = memo(
       t.repeat = new Vector2(width * 2, height * 2);
       t.wrapS = RepeatWrapping;
       t.wrapT = RepeatWrapping;
-      t.minFilter = LinearMipmapNearestFilter;
+      t.minFilter = NearestFilter;
       t.magFilter = NearestFilter;
     });
     return (

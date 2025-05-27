@@ -16,6 +16,7 @@ import { ComponentProps, Suspense } from "react";
 import { useBoolean, useTween } from "react-use";
 import { DoubleSide } from "three";
 import { rectangleRounded } from "./rectangleRounded";
+import { colors } from "colors";
 
 const font = `./fonts/geist-medium.ttf`;
 
@@ -95,7 +96,6 @@ export function Path({
   const dest = last(path);
 
   const { current: a } = useAgentPosition(id);
-
   const constrained = !!a?.constraints?.length;
 
   return (
@@ -131,7 +131,7 @@ export function Path({
                 renderOrder={9998}
                 dashScale={5}
                 depthTest={false}
-                lineWidth={s.scale.to((s) => s * 6)}
+                lineWidth={s.scale.to((s) => s * 4)}
                 color="#fff"
                 points={path}
                 dashed
@@ -139,11 +139,17 @@ export function Path({
               <AnimatedRing
                 scale={s.scale}
                 args={[0.6 / 2, 0.7 / 2, 32, 32]}
-                position={[x, y - 0.09, z]}
+                position={[x, y - 0.06, z]}
                 rotation={[-Math.PI / 2, 0, 0]}
               >
                 <meshBasicMaterial
-                  color={constrained ? "#ffc400" : "#00e676"}
+                  color={
+                    a?.state === "idle"
+                      ? colors.error
+                      : constrained
+                      ? colors.warning
+                      : colors.success
+                  }
                 />
               </AnimatedRing>
               <AnimatedRing
@@ -153,7 +159,7 @@ export function Path({
                 position={dest}
                 rotation={[-Math.PI / 2, 0, 0]}
               >
-                <meshBasicMaterial color={"#f50057"} depthTest={false} />
+                <meshBasicMaterial color={colors.error} depthTest={false} />
               </AnimatedRing>
               <AnimatedRing
                 renderOrder={9999}
@@ -162,7 +168,7 @@ export function Path({
                 position={src}
                 rotation={[-Math.PI / 2, 0, 0]}
               >
-                <meshBasicMaterial color={"#00e676"} depthTest={false} />
+                <meshBasicMaterial color={colors.success} depthTest={false} />
               </AnimatedRing>
               {a?.constraints?.map?.(({ id: to }) => (
                 <Constraint
@@ -200,7 +206,6 @@ export function Agent({ i, ...props }: { i: number } & InstanceProps) {
   if (!a) {
     return undefined;
   }
-
   return (
     <>
       <Suspense fallback={null}>

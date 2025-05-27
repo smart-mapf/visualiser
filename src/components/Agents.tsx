@@ -37,7 +37,7 @@ export function Agents() {
         material={material}
       >
         {range(contents?.count ?? 0).map((i) => (
-          <group position={[0, 0.1, 0]}>
+          <group position={[0, 0.07, 0]}>
             <Agent i={i} key={i} scale={2} />
           </group>
         ))}

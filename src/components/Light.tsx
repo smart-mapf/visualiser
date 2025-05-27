@@ -19,7 +19,7 @@ export function Light() {
       0,
       floor(camera.position.z)
     );
-    const y = floor(clamp(camera.position.y, 6, 10_000) * 3);
+    const y = floor(clamp(camera.position.y, 3, 10_000) * 3);
     light.current.shadow.camera.left = -y;
     light.current.shadow.camera.right = y;
     light.current.shadow.camera.top = -y;

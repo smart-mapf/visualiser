@@ -16,7 +16,7 @@ import {
 import { store } from "store";
 import { useEffect, useMemo, useState } from "react";
 import { useEffectOnce } from "react-use";
-import { AdgProgress, Step } from "smart";
+import { AdgProgress, StateChange, Step } from "smart";
 import { lerp, lerpRadians } from "utils";
 import { useSpeed } from "./play";
 import { selectionAtom } from "./selection";
@@ -26,6 +26,7 @@ const CHUNK_SIZE = 256;
 export type State = {
   state: Step;
   adg?: AdgProgress;
+  agentState?: Record<number, StateChange["value"]>;
 };
 
 export const logAtom = atom<string[]>([]);
@@ -101,6 +102,7 @@ export const useAgentInfo = (i: number) => {
             const agent = a?.state?.agents?.[i];
             if (!agent) return;
             return {
+              state: a.agentState?.[i],
               constraints: a.adg?.constraints?.[i]?.constraining_agent,
               position: [agent.x + 0.5, 0, -agent.y - 0.5] as [
                 number,
@@ -133,6 +135,7 @@ export const useAgentPosition = (i: number) => {
           // Teleport if too far away
           if (dist(p.position, v0.position) > 0.5) return v0;
           return {
+            state: v0.state,
             constraints: v0.constraints,
             position: zip(p.position, v0.position).map(([a, b]) =>
               lerp(a!, b!, alpha(speed))

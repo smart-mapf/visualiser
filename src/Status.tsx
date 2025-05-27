@@ -1,12 +1,8 @@
 import { useAgentInfo } from "client/state";
+import { colors } from "colors";
 import { Components } from "leva/plugin";
 import { chain, noop } from "lodash";
 import { useCss } from "react-use";
-
-const colors = {
-  warning: "#ffc400",
-  success: "#00e676",
-};
 
 const vectorProps = {
   onUpdate: noop,
@@ -62,18 +58,23 @@ export function Status({ id }: { id: number }) {
     },
   });
   if (!a) return null;
-  const status = a.constraints?.length
-    ? {
-        color: colors.warning,
-        label: `Waiting for ${chain(a.constraints)
-          .map((c) => c.id)
-          .uniq()
-          .thru(
-            (ids) => `${ids.length > 1 ? "agents" : "agent"} ${ids.join(", ")}`
-          )
-          .value()}`,
-      }
-    : { color: colors.success, label: "Healthy" };
+  console.log(a.state);
+  const status =
+    a.constraints?.length || a.state === "idle"
+      ? {
+          color: a.state === "idle" ? colors.error : colors.warning,
+          label: `${
+            a.state === "idle" ? "Waiting for" : "Constrained by"
+          } ${chain(a.constraints)
+            .map((c) => c.id)
+            .uniq()
+            .thru(
+              (ids) =>
+                `${ids.length > 1 ? "agents" : "agent"} ${ids.join(", ")}`
+            )
+            .value()}`,
+        }
+      : { color: colors.success, label: "Healthy" };
   return (
     <div className={cls}>
       <h4>
@@ -82,6 +83,7 @@ export function Status({ id }: { id: number }) {
           <Dot color={status.color} /> {status.label}
         </span>
       </h4>
+      <p>State: {a.state}</p>
       <Components.Row input>
         <Components.Label>Position</Components.Label>
         <Components.Vector
