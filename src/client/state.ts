@@ -131,10 +131,10 @@ export const useAgentInfo = (i: number) => {
       [i]
     )
   );
-  const previous = usePreviousDefined(v1 || initial);
+  const previous = usePreviousDefined(v1);
   return !v1
     ? {
-        value: { ...previous.value!, state: "unknown" },
+        value: { ...(previous.value ?? initial), state: "unknown" },
         isPrevious: true,
       }
     : previous;
