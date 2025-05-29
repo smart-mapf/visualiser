@@ -113,7 +113,7 @@ export function CurrentAgent({
                   anchorY="middle"
                   fontSize={0.11}
                 >
-                  Agent {agent.id}
+                  Robot {agent.id}
                 </AnimatedText>
               </AnimatedBillboard>
               <AnimatedRing
