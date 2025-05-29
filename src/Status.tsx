@@ -84,17 +84,14 @@ export function Status({ id }: { id: number }) {
               )
                 .map((c) => c.id)
                 .uniq()
-                .thru(
-                  (ids) =>
-                    `${ids.length > 1 ? "agents" : "agent"} ${ids.join(", ")}`
-                )
+                .join(", ")
                 .value()}`,
         }
       : { color: colors.success, label: "Active" };
   return (
     <div className={cls}>
       <h4>
-        Agent {id}{" "}
+        Robot {id}{" "}
         <span>
           <Dot color={status.color} /> {status.label}
         </span>

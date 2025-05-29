@@ -90,7 +90,7 @@ export function Inputs() {
           ? `Simulating (Step ${length})`
           : contents?.count
           ? `Simulate (${contents.count} ${
-              contents.count === 1 ? "agent" : "agents"
+              contents.count === 1 ? "robot" : "robots"
             })`
           : "Simulate",
       },

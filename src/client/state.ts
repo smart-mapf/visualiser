@@ -134,7 +134,7 @@ export const useAgentInfo = (i: number) => {
   const previous = usePreviousDefined(v1 || initial);
   return !v1
     ? {
-        value: { ...previous.value, state: "unknown" },
+        value: { ...previous.value!, state: "unknown" },
         isPrevious: true,
       }
     : previous;
