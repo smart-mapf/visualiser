@@ -26,7 +26,7 @@ export function Playback() {
         onChange: setTime,
         value: time ?? 0,
         min: 0,
-        max: timespan,
+        max: max([timespan - 1, 0]),
         step: 1,
         label: "Time",
         disabled: !timespan,
@@ -54,14 +54,21 @@ export function Playback() {
     const interval = setInterval(() => {
       const tb = now();
       const next =
-        min([
-          store.get(timeAtom) +
-            max([1, store.get(speedAtom) * round((tb - ta) / frame)])!,
-          store.get(lengthAtom),
+        max([
+          min([
+            store.get(timeAtom) +
+              max([1, store.get(speedAtom) * round((tb - ta) / frame)])!,
+            store.get(lengthAtom) - 1,
+          ]),
+          0,
         ]) ?? 0;
       set({ time: next });
       setTime(next);
-      if (next && next === store.get(lengthAtom) && !store.get(bufferingAtom)) {
+      if (
+        next &&
+        next === store.get(lengthAtom) - 1 &&
+        !store.get(bufferingAtom)
+      ) {
         setPlaying(false);
       }
       ta = tb;
