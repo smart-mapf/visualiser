@@ -11,6 +11,7 @@ import {
   isUndefined,
   round,
   throttle,
+  thru,
   zip,
 } from "lodash";
 import { store } from "store";
@@ -20,6 +21,7 @@ import { AdgProgress, StateChange, Step } from "smart";
 import { lerp, lerpRadians } from "utils";
 import { useSpeed } from "./play";
 import { selectionAtom } from "./selection";
+import { useSolutionContents } from "./run";
 
 const CHUNK_SIZE = 256;
 
@@ -93,29 +95,49 @@ export function usePreviousDefined<T>(t?: T) {
 const alpha = (n: number) => 0.1 - 1 / (0.1 * n + 1) + 1;
 
 export const useAgentInfo = (i: number) => {
-  return usePreviousDefined(
-    useAtomValue(
-      useMemo(
-        () =>
-          atom((get) => {
-            const a = get(currentItemAtom);
-            const agent = a?.state?.agents?.[i];
-            if (!agent) return;
-            return {
-              state: a.agentState?.[i],
-              constraints: a.adg?.constraints?.[i]?.constraining_agent,
-              position: [agent.x + 0.5, 0, -agent.y - 0.5] as [
-                number,
-                number,
-                number
-              ],
-              rotation: [0, agent.rz, 0] as [number, number, number],
-            };
-          }),
-        [i]
-      )
+  const { data: solution } = useSolutionContents();
+  const initial = useMemo(
+    () => ({
+      state: "unknown",
+      position: thru(
+        solution?.paths?.[i]?.[0],
+        (a) => [-(a?.x ?? 0) + 0.5, 0, (a?.y ?? 0) - 0.5] as const
+      ),
+      rotation: [0, 0, 0] as const,
+      constraints: [],
+      id: i,
+    }),
+    [solution?.paths, i]
+  );
+  const v1 = useAtomValue(
+    useMemo(
+      () =>
+        atom((get) => {
+          const a = get(currentItemAtom);
+          const agent = a?.state?.agents?.[i];
+          if (!agent) return;
+          return {
+            id: i,
+            state: a.agentState?.[i],
+            constraints: a.adg?.constraints?.[i]?.constraining_agent,
+            position: [agent.x + 0.5, 0, -agent.y - 0.5] as [
+              number,
+              number,
+              number
+            ],
+            rotation: [0, agent.rz, 0] as [number, number, number],
+          };
+        }),
+      [i]
     )
   );
+  const previous = usePreviousDefined(v1 || initial);
+  return !v1
+    ? {
+        value: { ...previous.value, state: "unknown" },
+        isPrevious: true,
+      }
+    : previous;
 };
 
 function dist(a: [number, number, number], b: [number, number, number]) {
@@ -135,6 +157,7 @@ export const useAgentPosition = (i: number) => {
           // Teleport if too far away
           if (dist(p.position, v0.position) > 0.5) return v0;
           return {
+            id: v0.id,
             state: v0.state,
             constraints: v0.constraints,
             position: zip(p.position, v0.position).map(([a, b]) =>

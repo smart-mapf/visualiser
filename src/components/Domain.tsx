@@ -39,7 +39,7 @@ const Obstacles = memo(
           limit={items?.length ?? 0}
           castShadow
           position={[height / 2, 0, -width / 2]}
-          material={checkerMaterial(1)}
+          material={checkerMaterial(4)}
         >
           <boxGeometry />
           {items?.map?.((item, i) => (

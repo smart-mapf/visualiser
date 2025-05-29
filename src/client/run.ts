@@ -3,8 +3,6 @@ import { Mutex } from "async-mutex";
 import { client } from "client/trpc";
 import { atom, useAtom, useAtomValue, useSetAtom } from "jotai";
 import {
-  clone,
-  cloneDeep,
   identity,
   isArray,
   isNumber,
@@ -122,9 +120,7 @@ export function useRun() {
                     switch (d.type) {
                       case "state_change":
                         if (isNumber(d.agent)) {
-                          console.log(d.agent, d.value);
                           agentState[d.agent] = d.value;
-                          console.log(structuredClone(agentState));
                         } else {
                           range(contents.count).forEach((i) => {
                             agentState[i] = d.value;

@@ -1,8 +1,7 @@
-import { a, useSpring, useTransition } from "@react-spring/three";
+import { a, useSpring, useTransition, to } from "@react-spring/three";
 import {
   Billboard,
   Circle,
-  Instance,
   InstanceProps,
   Line,
   Ring,
@@ -11,12 +10,13 @@ import {
 import { useSolutionContents } from "client/run";
 import { useSelection } from "client/selection";
 import { useAgentPosition } from "client/state";
-import { head, last, thru } from "lodash";
-import { ComponentProps, Suspense } from "react";
-import { useBoolean, useTween } from "react-use";
-import { DoubleSide } from "three";
-import { rectangleRounded } from "./rectangleRounded";
 import { colors } from "colors";
+import { head, isUndefined, last } from "lodash";
+import { ComponentProps, Suspense } from "react";
+import { useBoolean } from "react-use";
+import { DoubleSide } from "three";
+import { AgentInstance } from "./AgentInstances";
+import { rectangleRounded } from "./rectangleRounded";
 
 const font = `./fonts/geist-medium.ttf`;
 
@@ -24,6 +24,7 @@ const AnimatedLine = a(Line);
 const AnimatedRing = a(Ring);
 const AnimatedText = a(Text);
 const AnimatedBillboard = a(Billboard);
+const AnimatedAgentInstance = a(AgentInstance);
 
 function Constraint({
   from = 0,
@@ -50,7 +51,7 @@ function Constraint({
   return (
     <AnimatedLine
       {...props}
-      points={[thru(a, ([x, y, z]) => [x, y + 1, z]), b]}
+      points={[a, b]}
       dashOffset={springs.offset}
       dashScale={20}
       color="#ffc400"
@@ -61,55 +62,43 @@ function Constraint({
   );
 }
 
-export function Path({
-  id,
+export function CurrentAgent({
+  agent,
   visible,
-  current,
-  hover,
+  hovered,
+  color,
 }: {
-  id: number;
-  hover?: boolean;
+  agent: NonNullable<ReturnType<typeof useAgentPosition>["current"]>;
   visible?: boolean;
-  current: readonly [number, number, number];
+  hovered?: boolean;
+  color?: string;
 }) {
-  const { data } = useSolutionContents();
-
+  const [x, y, z] = agent.position;
   const visibleTransitions = useTransition(visible, {
     from: { scale: 0 },
     enter: { scale: 1 },
     leave: { scale: 0 },
   });
-  const hoverTransitions = useTransition(hover && !visible, {
+
+  const hoverTransitions = useTransition(hovered && !visible, {
     from: { scale: 0 },
     enter: { scale: 1 },
     leave: { scale: 0 },
   });
-
-  const [x, y, z] = current;
-
-  const path =
-    data?.paths?.[id]?.map?.(
-      (p) => [-p.x + 0.5, -0.1, p.y - 0.5] as [x: number, y: number, z: number]
-    ) ?? [];
-
-  const src = head(path);
-  const dest = last(path);
-
-  const { current: a } = useAgentPosition(id);
-  const constrained = !!a?.constraints?.length;
 
   return (
     <>
       {visibleTransitions(
         (s, v) =>
           v && (
-            <>
-              <AnimatedBillboard scale={s.scale} position={[x, y + 1, z]}>
+            <group>
+              <AnimatedBillboard scale={s.scale} position={[x, y + 0.75, z]}>
                 <mesh
-                  geometry={rectangleRounded(1, 0.4, 0.2, 4)}
+                  geometry={rectangleRounded(0.9, 0.3, 0.15, 4)}
                   renderOrder={9998}
                 >
                   <meshBasicMaterial
+                    transparent
                     color="#fff"
                     depthTest={false}
                     side={DoubleSide}
@@ -122,36 +111,97 @@ export function Path({
                   color="#181c20"
                   anchorX="center"
                   anchorY="middle"
-                  fontSize={0.13}
+                  fontSize={0.11}
                 >
-                  Agent {id}
+                  Agent {agent.id}
                 </AnimatedText>
               </AnimatedBillboard>
-              <AnimatedLine
-                renderOrder={9998}
-                dashScale={5}
-                depthTest={false}
-                lineWidth={s.scale.to((s) => s * 4)}
-                color="#fff"
-                points={path}
-                dashed
-              />
               <AnimatedRing
                 scale={s.scale}
                 args={[0.6 / 2, 0.7 / 2, 32, 32]}
                 position={[x, y - 0.06, z]}
                 rotation={[-Math.PI / 2, 0, 0]}
               >
-                <meshBasicMaterial
-                  color={
-                    a?.state === "idle"
-                      ? colors.error
-                      : constrained
-                      ? colors.warning
-                      : colors.success
-                  }
-                />
+                <meshBasicMaterial color={color} />
               </AnimatedRing>
+            </group>
+          )
+      )}
+      {hoverTransitions(
+        (s, v) =>
+          v && (
+            <AnimatedBillboard scale={s.scale} position={[x, y + 0.75, z]}>
+              <Circle args={[0.1, 16]}>
+                <meshBasicMaterial color="#fff" />
+              </Circle>
+            </AnimatedBillboard>
+          )
+      )}
+    </>
+  );
+}
+
+export function Path({
+  visible,
+  agent,
+  hovered,
+}: {
+  hovered?: boolean;
+  visible?: boolean;
+  agent?: ReturnType<typeof useAgentPosition>["current"];
+}) {
+  const { data } = useSolutionContents();
+
+  const visibleTransitions = useTransition(visible, {
+    from: { scale: 0 },
+    enter: { scale: 1 },
+    leave: { scale: 0 },
+  });
+
+  const path =
+    data?.paths?.[agent?.id ?? 0]?.map?.(
+      (p) => [-p.x + 0.5, -0.06, p.y - 0.5] as [x: number, y: number, z: number]
+    ) ?? [];
+
+  const src = head(path);
+  const dest = last(path);
+
+  const constrained = !!agent?.constraints?.length;
+
+  return (
+    <>
+      {agent && (
+        <CurrentAgent
+          agent={agent}
+          visible={visible}
+          hovered={hovered}
+          color={
+            agent.state === "unknown"
+              ? colors.idle
+              : isUndefined(agent.state)
+              ? colors.idle
+              : agent.state === "finished"
+              ? colors.idle
+              : agent.state === "idle"
+              ? colors.error
+              : constrained
+              ? colors.warning
+              : colors.success
+          }
+        />
+      )}
+      {visibleTransitions(
+        (s, v) =>
+          v && (
+            <group>
+              <AnimatedLine
+                dashScale={5}
+                lineWidth={s.scale.to((s) => s * 4)}
+                color="#fff"
+                points={path}
+                dashed
+              />
+
               <AnimatedRing
                 renderOrder={9999}
                 scale={s.scale}
@@ -170,26 +220,14 @@ export function Path({
               >
                 <meshBasicMaterial color={colors.success} depthTest={false} />
               </AnimatedRing>
-              {a?.constraints?.map?.(({ id: to }) => (
+              {agent?.constraints?.map?.(({ id: to }) => (
                 <Constraint
-                  from={id}
+                  from={agent?.id}
                   to={to}
                   lineWidth={s.scale.to((s) => s * 2)}
                 />
               ))}
-            </>
-          )
-      )}
-      {hoverTransitions(
-        (s, v) =>
-          v && (
-            <>
-              <AnimatedBillboard scale={s.scale} position={[x, y + 1, z]}>
-                <Circle args={[0.1, 16]}>
-                  <meshBasicMaterial color="#fff" />
-                </Circle>
-              </AnimatedBillboard>
-            </>
+            </group>
           )
       )}
     </>
@@ -197,40 +235,50 @@ export function Path({
 }
 
 export function Agent({ i, ...props }: { i: number } & InstanceProps) {
-  const scale = useTween("outExpo", 2000);
   const [selected, toggleSelected] = useSelection();
   const [hovered, toggleHovered] = useBoolean(false);
+  const [down, toggleDown] = useBoolean(false);
 
   const { current: a } = useAgentPosition(i);
+  const transitions = useTransition(+!!a, {
+    from: { scale: 0 },
+    enter: { scale: 1 },
+    leave: { scale: 0 },
+    config: { duration: 200 },
+  });
 
-  if (!a) {
-    return undefined;
-  }
+  const springs = useSpring({
+    opacity:
+      (a?.state === "unknown" ? 0.5 : 1) *
+      (hovered ? 0.75 : 1) *
+      (down ? 0.5 : 1),
+    config: { duration: 200 },
+  });
+
   return (
     <>
       <Suspense fallback={null}>
-        <Instance
-          position={a.position}
-          rotation={a.rotation}
-          {...props}
-          scale={(props.scale as number) * scale}
-          onClick={() => {
-            toggleSelected(i);
-          }}
-          onPointerOver={() => toggleHovered(true)}
-          onPointerOut={() => toggleHovered(false)}
-          color={hovered ? "#ccc" : "#fff"}
-        />
+        {transitions(
+          (s, v) =>
+            v && (
+              <AnimatedAgentInstance
+                bayerHash={to([springs.opacity, s.scale], (o, s) => o * s)}
+                position={a?.position}
+                rotation={a?.rotation}
+                {...props}
+                onClick={() => {
+                  toggleSelected(i);
+                }}
+                onPointerDown={() => toggleDown(true)}
+                onPointerUp={() => toggleDown(false)}
+                onPointerOver={() => toggleHovered(true)}
+                onPointerOut={() => toggleHovered(false)}
+              />
+            )
+        )}
       </Suspense>
       <Suspense fallback={null}>
-        {
-          <Path
-            hover={hovered}
-            visible={selected.has(i)}
-            id={i}
-            current={a.position}
-          />
-        }
+        <Path hovered={hovered} visible={selected.has(i)} agent={a} />
       </Suspense>
     </>
   );

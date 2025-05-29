@@ -1,7 +1,7 @@
 import { useAgentInfo } from "client/state";
 import { colors } from "colors";
 import { Components } from "leva/plugin";
-import { chain, noop } from "lodash";
+import { chain, isUndefined, noop } from "lodash";
 import { useCss } from "react-use";
 
 const vectorProps = {
@@ -30,7 +30,7 @@ function Dot({ color }: { color: string }) {
     width: "var(--leva-space-sm)",
     height: "var(--leva-space-sm)",
     borderRadius: "50%",
-    marginBottom: "1.5px",
+    marginBottom: "1.2px",
     backgroundColor: color,
   });
   return <span className={cls} />;
@@ -58,23 +58,39 @@ export function Status({ id }: { id: number }) {
     },
   });
   if (!a) return null;
-  console.log(a.state);
   const status =
-    a.constraints?.length || a.state === "idle"
+    a.constraints?.length ||
+    a.state === "idle" ||
+    a.state === "finished" ||
+    a.state === "unknown" ||
+    isUndefined(a.state)
       ? {
-          color: a.state === "idle" ? colors.error : colors.warning,
-          label: `${
-            a.state === "idle" ? "Waiting for" : "Constrained by"
-          } ${chain(a.constraints)
-            .map((c) => c.id)
-            .uniq()
-            .thru(
-              (ids) =>
-                `${ids.length > 1 ? "agents" : "agent"} ${ids.join(", ")}`
-            )
-            .value()}`,
+          color:
+            isUndefined(a.state) ||
+            a.state === "finished" ||
+            a.state === "unknown"
+              ? colors.idle
+              : a.state === "idle"
+              ? colors.error
+              : colors.warning,
+          label: isUndefined(a.state)
+            ? "Initialising"
+            : a.state === "unknown"
+            ? "Not simulated"
+            : a.state === "finished"
+            ? "Finished"
+            : `${a.state === "idle" ? "Waiting for" : "Constrained by"} ${chain(
+                a.constraints
+              )
+                .map((c) => c.id)
+                .uniq()
+                .thru(
+                  (ids) =>
+                    `${ids.length > 1 ? "agents" : "agent"} ${ids.join(", ")}`
+                )
+                .value()}`,
         }
-      : { color: colors.success, label: "Healthy" };
+      : { color: colors.success, label: "Active" };
   return (
     <div className={cls}>
       <h4>
@@ -83,7 +99,6 @@ export function Status({ id }: { id: number }) {
           <Dot color={status.color} /> {status.label}
         </span>
       </h4>
-      <p>State: {a.state}</p>
       <Components.Row input>
         <Components.Label>Position</Components.Label>
         <Components.Vector

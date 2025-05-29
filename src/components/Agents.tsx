@@ -1,10 +1,11 @@
-import { Instances, useGLTF, useTexture } from "@react-three/drei";
+import { InstancedAttribute, useGLTF, useTexture } from "@react-three/drei";
 import { useSolutionContents } from "client/run";
 import { useModel } from "hooks/useModel";
 import { range } from "lodash";
 import { Suspense, useMemo } from "react";
-import { MeshPhysicalMaterial } from "three";
 import { Agent } from "./Agent";
+import { AgentInstances } from "./AgentInstances";
+import { bayerHashPhysicalMeshMaterial } from "./bayerHashPhysicalMeshMaterial";
 
 useGLTF.preload("./robot-final.gltf");
 useTexture.preload("./base.png");
@@ -13,9 +14,9 @@ export function Agents() {
   const { geometry } = useModel("./robot-final.gltf");
   const texture = useTexture("./base.png");
 
-  const material = useMemo(() => {
+  const { material, depthMaterial } = useMemo(() => {
     texture.flipY = false;
-    return new MeshPhysicalMaterial({
+    return bayerHashPhysicalMeshMaterial({
       map: texture,
       roughness: 0.5,
       metalness: 0,
@@ -29,19 +30,21 @@ export function Agents() {
 
   return (
     <Suspense fallback={null}>
-      <Instances
+      <AgentInstances
         frustumCulled={false}
         castShadow
         receiveShadow
         geometry={geometry}
+        customDepthMaterial={depthMaterial}
         material={material}
       >
+        <InstancedAttribute name="bayerHash" defaultValue={1} />
         {range(contents?.count ?? 0).map((i) => (
-          <group position={[0, 0.07, 0]}>
+          <group position={[0, 0.07, 0]} key={i}>
             <Agent i={i} key={i} scale={2} />
           </group>
         ))}
-      </Instances>
+      </AgentInstances>
     </Suspense>
   );
 }
