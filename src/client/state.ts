@@ -9,6 +9,8 @@ import {
   fromPairs,
   isEqual,
   isUndefined,
+  max,
+  range,
   round,
   throttle,
   thru,
@@ -17,7 +19,7 @@ import {
 import { store } from "store";
 import { useEffect, useMemo, useState } from "react";
 import { useEffectOnce } from "react-use";
-import { AdgProgress, StateChange, Step } from "smart";
+import { AdgProgress, ExecProgress, StateChange, Stats, Step } from "smart";
 import { lerp, lerpRadians } from "utils";
 import { useSpeed } from "./play";
 import { selectionAtom } from "./selection";
@@ -26,9 +28,11 @@ import { useSolutionContents } from "./run";
 const CHUNK_SIZE = 256;
 
 export type State = {
-  state: Step;
+  step: Step;
   adg?: AdgProgress;
   agentState?: Record<number, StateChange["value"]>;
+  progress?: Record<number, Pick<ExecProgress, "finished" | "total">>;
+  stats?: Omit<Stats, "type">;
 };
 
 export const logAtom = atom<string[]>([]);
@@ -78,6 +82,14 @@ const setCacheAtom = atom(null, async (get, set) => {
   );
 });
 
+export const historyAtom = atom((get) => {
+  const cache = get(cacheAtom);
+  const t = floor(get(roundedTimeSmoothAtom));
+  return range(max([0, t - CHUNK_SIZE / 2])!, t).map(
+    (i) => cache[floor(i / CHUNK_SIZE)]?.state?.[i % CHUNK_SIZE]
+  );
+});
+
 // Atom to get interpolated item
 export const currentItemAtom = atom<State | null>((get) => {
   const t = get(roundedTimeSmoothAtom);
@@ -98,6 +110,7 @@ export const useAgentInfo = (i: number) => {
   const { data: solution } = useSolutionContents();
   const initial = useMemo(
     () => ({
+      progress: undefined,
       state: "unknown",
       position: thru(
         solution?.paths?.[i]?.[0],
@@ -114,9 +127,10 @@ export const useAgentInfo = (i: number) => {
       () =>
         atom((get) => {
           const a = get(currentItemAtom);
-          const agent = a?.state?.agents?.[i];
+          const agent = a?.step?.agents?.[i];
           if (!agent) return;
           return {
+            progress: a.progress?.[i],
             id: i,
             state: a.agentState?.[i],
             constraints: a.adg?.constraints?.[i]?.constraining_agent,
@@ -140,7 +154,10 @@ export const useAgentInfo = (i: number) => {
     : previous;
 };
 
-function dist(a: [number, number, number], b: [number, number, number]) {
+function dist(
+  a: readonly [number, number, number],
+  b: readonly [number, number, number]
+) {
   return Math.sqrt(
     (a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2 + (a[2] - b[2]) ** 2
   );
@@ -166,7 +183,7 @@ export const useAgentPosition = (i: number) => {
             rotation: zip(p.rotation, v0.rotation).map(([a, b]) =>
               lerpRadians(a!, b!, alpha(speed))
             ) as [number, number, number],
-          };
+          } as typeof v0;
         }
         return v0;
       });
@@ -196,9 +213,9 @@ export const appendAtom = atom<null, [State[]], unknown>(
   null,
   (_get, set, items) => {
     for (const item of items) {
-      const i = floor(item.state.clock / CHUNK_SIZE);
+      const i = floor(item.step.clock / CHUNK_SIZE);
       const chunk = cache[i] ?? { length: 0, state: [] };
-      chunk.state[item.state.clock % CHUNK_SIZE] = item;
+      chunk.state[item.step.clock % CHUNK_SIZE] = item;
       chunk.length++;
       cache[i] = chunk;
       if (chunk.length === CHUNK_SIZE) {

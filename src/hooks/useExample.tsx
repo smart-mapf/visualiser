@@ -23,6 +23,9 @@ export function useExample(path: string) {
     mutationFn: async (size: (typeof sizes)[number]) => {
       if (!file) return null;
       await clear();
+      setMapFile(null);
+      setSolutionFile(null);
+      setScenarioFile(null);
       const name = basename(path, true);
       const solution = `/examples/${name}/path/${size}/scen_1_paths.txt`;
       const scen = `/examples/${name}-random-1.scen`;

@@ -6,13 +6,15 @@ import {
   identity,
   isArray,
   isNumber,
+  omit,
+  pick,
   range,
   slice,
   throttle,
   trim,
 } from "lodash";
 import { useRef } from "react";
-import { AdgProgress, Output } from "smart";
+import { Output } from "smart";
 import { id } from "utils";
 import { appendAtom, clearAtom, logAtom, State } from "./state";
 
@@ -83,6 +85,9 @@ export function useRun() {
             return;
           setBuffering(true);
           const controller = new AbortController();
+
+          // ─── Options ──────────────────────────
+
           const options = {
             agents: contents.count,
             map: await mapFile.text(),
@@ -90,6 +95,9 @@ export function useRun() {
             paths: await solutionFile.text(),
             flipXY: flip,
           };
+
+          // ─── Commit ──────────────────────────
+
           let actions: State[] = [];
           const f = throttle(
             () => {
@@ -100,8 +108,17 @@ export function useRun() {
             1500,
             { trailing: true, leading: false }
           );
+
+          // ─── State ───────────────────────────
+
           const agentState: State["agentState"] = {};
-          let adg: AdgProgress | undefined = undefined;
+          const progress: State["progress"] = {};
+          let adg: State["adg"] = undefined;
+          let prev: State["step"] | undefined = undefined;
+          let stats: State["stats"] = undefined;
+
+          // ─────────────────────────────────────
+
           return await new Promise<void>((res, rej) => {
             abort.current = () => {
               controller.abort();
@@ -138,11 +155,19 @@ export function useRun() {
                         break;
                       case "tick":
                         actions.push({
-                          state: d,
+                          step: d,
                           adg,
                           agentState: structuredClone(agentState),
+                          progress: structuredClone(progress),
                         });
                         f();
+                        prev = d;
+                        break;
+                      case "exec_progress":
+                        progress[d.agent] = pick(d, "finished", "total");
+                        break;
+                      case "stats":
+                        stats = omit(d, "type");
                         break;
                       case "error":
                         console.error(d.error);
@@ -159,6 +184,15 @@ export function useRun() {
                 rej(error);
               },
               onComplete: () => {
+                if (prev) {
+                  actions.push({
+                    step: prev,
+                    adg,
+                    agentState: structuredClone(agentState),
+                    progress: structuredClone(progress),
+                    stats: structuredClone(stats),
+                  });
+                }
                 s.unsubscribe();
                 res();
               },

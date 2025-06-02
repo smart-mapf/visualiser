@@ -1,8 +1,10 @@
 import { useAgentInfo } from "client/state";
 import { colors } from "colors";
+import { HistorySparkline } from "components/HistorySparkline";
 import { Components } from "leva/plugin";
-import { chain, isUndefined, noop } from "lodash";
+import { chain, isUndefined, noop, round } from "lodash";
 import { useCss } from "react-use";
+import { useLerp } from "hooks/useLerp";
 
 const vectorProps = {
   onUpdate: noop,
@@ -57,6 +59,9 @@ export function Status({ id }: { id: number }) {
       },
     },
   });
+
+  const a1 = useLerp(a?.progress?.finished ?? 0);
+
   if (!a) return null;
   const status =
     a.constraints?.length ||
@@ -76,7 +81,7 @@ export function Status({ id }: { id: number }) {
           label: isUndefined(a.state)
             ? "Initialising"
             : a.state === "unknown"
-            ? "Not simulated"
+            ? "--"
             : a.state === "finished"
             ? "Finished"
             : `${a.state === "idle" ? "Waiting for" : "Constrained by"} ${chain(
@@ -88,6 +93,7 @@ export function Status({ id }: { id: number }) {
                 .value()}`,
         }
       : { color: colors.success, label: "Active" };
+
   return (
     <div className={cls}>
       <h4>
@@ -118,6 +124,15 @@ export function Status({ id }: { id: number }) {
           }}
         />
       </Components.Row>
+      <Components.Row input>
+        <Components.Label>Completion</Components.Label>
+        <Components.Label>
+          {round(a1)}/{a.progress?.total ?? "--"} (
+          {a.progress?.finished ? round((a1 / a.progress.total) * 100) : "0"}
+          %)
+        </Components.Label>
+      </Components.Row>
+      <HistorySparkline id={id} />
     </div>
   );
 }

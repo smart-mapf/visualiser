@@ -29,17 +29,15 @@ const AnimatedAgentInstance = a(AgentInstance);
 function Constraint({
   from = 0,
   to = 0,
+  color,
   ...props
 }: {
   from?: number;
   to?: number;
+  color?: string;
 } & Partial<ComponentProps<typeof AnimatedLine>>) {
-  const {
-    current: { position: a = [0, 0, 0] as [number, number, number] } = {},
-  } = useAgentPosition(from) ?? {};
-  const {
-    current: { position: b = [0, 0, 0] as [number, number, number] } = {},
-  } = useAgentPosition(to) ?? {};
+  const { current: { position: a } = {} } = useAgentPosition(from) ?? {};
+  const { current: { position: b } = {} } = useAgentPosition(to) ?? {};
 
   const springs = useSpring({
     from: { offset: 0 },
@@ -51,10 +49,10 @@ function Constraint({
   return (
     <AnimatedLine
       {...props}
-      points={[a, b]}
+      points={[a, b] as unknown}
       dashOffset={springs.offset}
       dashScale={20}
-      color="#ffc400"
+      color={color}
       dashed
       renderOrder={9997}
       depthTest={false}
@@ -118,7 +116,7 @@ export function CurrentAgent({
               </AnimatedBillboard>
               <AnimatedRing
                 scale={s.scale}
-                args={[0.6 / 2, 0.7 / 2, 32, 32]}
+                args={[0.45 / 2, 0.55 / 2, 32, 32]}
                 position={[x, y - 0.06, z]}
                 rotation={[-Math.PI / 2, 0, 0]}
               >
@@ -168,6 +166,19 @@ export function Path({
 
   const constrained = !!agent?.constraints?.length;
 
+  const color = agent
+    ? agent.state === "unknown"
+      ? colors.idle
+      : isUndefined(agent.state)
+      ? colors.idle
+      : agent.state === "finished"
+      ? colors.idle
+      : agent.state === "idle"
+      ? colors.error
+      : constrained
+      ? colors.warning
+      : colors.success
+    : "#000";
   return (
     <>
       {agent && (
@@ -175,19 +186,7 @@ export function Path({
           agent={agent}
           visible={visible}
           hovered={hovered}
-          color={
-            agent.state === "unknown"
-              ? colors.idle
-              : isUndefined(agent.state)
-              ? colors.idle
-              : agent.state === "finished"
-              ? colors.idle
-              : agent.state === "idle"
-              ? colors.error
-              : constrained
-              ? colors.warning
-              : colors.success
-          }
+          color={color}
         />
       )}
       {visibleTransitions(
@@ -224,6 +223,7 @@ export function Path({
                 <Constraint
                   from={agent?.id}
                   to={to}
+                  color={color}
                   lineWidth={s.scale.to((s) => s * 2)}
                 />
               ))}

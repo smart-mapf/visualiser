@@ -33,11 +33,11 @@ export function Light() {
       <ambientLight intensity={Math.PI / 2} color="#ade5ff" />
       <directionalLight
         ref={light}
-        color="#fff2d9"
+        color="#ffefd9"
         castShadow
         shadow-bias={-0.0001}
         shadow-mapSize={[2048 * 1.5, 2048 * 1.5]}
-        intensity={4}
+        intensity={5}
       />
     </>
   );
