@@ -36,6 +36,7 @@ export function Example({ path }: { path: string }) {
         gap: "var(--leva-space-xs)",
         justifyContent: "flex-end",
         "> button": {
+          color: "var(--leva-colors-text1)",
           backgroundColor: "var(--leva-colors-elevation3)",
           fontWeight: 400,
           "&:hover": {
