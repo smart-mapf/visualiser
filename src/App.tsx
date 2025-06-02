@@ -8,6 +8,7 @@ import { Stage } from "./components/Stage";
 import { Logs } from "Logs";
 import { Selection } from "leva-controls/Selection";
 import { Examples } from "leva-controls/Examples";
+import { Statistics } from "leva-controls/Statistics";
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
         <Inputs />
         <Playback />
         <Selection />
+        <Statistics />
         <Logs />
       </Suspense>
       <div style={{ height: "100vh", width: "100vw" }}>
@@ -29,7 +31,7 @@ function App() {
               folderTitleHeight: "32px",
               numberInputMinWidth: "90px",
               rowHeight: "32px",
-              rootWidth: "400px",
+              rootWidth: "420px",
               controlWidth: "240px",
             },
             fonts: {

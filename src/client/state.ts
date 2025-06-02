@@ -32,8 +32,10 @@ export type State = {
   adg?: AdgProgress;
   agentState?: Record<number, StateChange["value"]>;
   progress?: Record<number, Pick<ExecProgress, "finished" | "total">>;
-  stats?: Omit<Stats, "type">;
 };
+
+export const statsAtom = atom<Omit<Stats, "type">>();
+export const useStats = () => useAtom(statsAtom);
 
 export const logAtom = atom<string[]>([]);
 export const useLog = () => useAtom(logAtom);
@@ -241,6 +243,7 @@ export const clearAtom = atom<null, never[], unknown>(null, (_get, set) => {
     set(selectionAtom, new Set());
     set(lengthAtom, 0);
     set(timespanAtom, 0);
+    set(statsAtom, undefined);
     await clear();
     await set(setCacheAtom);
   }, 0);
