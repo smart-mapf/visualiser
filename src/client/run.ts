@@ -16,7 +16,7 @@ import {
 import { useRef } from "react";
 import { Output } from "smart";
 import { id } from "utils";
-import { appendAtom, clearAtom, logAtom, State } from "./state";
+import { appendAtom, clearAtom, logAtom, State, statsAtom } from "./state";
 
 // ─── Input State ─────────────────────────────────────────────────────────────
 
@@ -73,6 +73,7 @@ export function useRun() {
   const { data: contents } = useSolutionContents();
   const append = useSetAtom(appendAtom);
   const clear = useSetAtom(clearAtom);
+  const setStats = useSetAtom(statsAtom);
   const setLog = useSetAtom(logAtom);
   const abort = useRef<() => void | null>();
   const setBuffering = useSetAtom(bufferingAtom);
@@ -115,7 +116,6 @@ export function useRun() {
           const progress: State["progress"] = {};
           let adg: State["adg"] = undefined;
           let prev: State["step"] | undefined = undefined;
-          let stats: State["stats"] = undefined;
 
           // ─────────────────────────────────────
 
@@ -167,7 +167,7 @@ export function useRun() {
                         progress[d.agent] = pick(d, "finished", "total");
                         break;
                       case "stats":
-                        stats = omit(d, "type");
+                        setStats(omit(d, "type"));
                         break;
                       case "error":
                         console.error(d.error);
@@ -190,7 +190,6 @@ export function useRun() {
                     adg,
                     agentState: structuredClone(agentState),
                     progress: structuredClone(progress),
-                    stats: structuredClone(stats),
                   });
                 }
                 s.unsubscribe();

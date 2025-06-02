@@ -3,7 +3,7 @@ import { useControls } from "leva";
 import { jsx } from "leva-plugins/jsx";
 import { thru } from "lodash";
 import { useEffect } from "react";
-import { Status } from "Status";
+import { Status } from "components/Status";
 
 export function Selection() {
   const [selection] = useSelection();
