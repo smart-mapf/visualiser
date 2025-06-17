@@ -7,12 +7,12 @@ import { Agent } from "./Agent";
 import { AgentInstances } from "./AgentInstances";
 import { bayerHashPhysicalMeshMaterial } from "./bayerHashPhysicalMeshMaterial";
 
-useGLTF.preload("./robot-final.gltf");
-useTexture.preload("./base.png");
+useGLTF.preload(`${import.meta.env.BASE_URL}/robot-final.gltf`);
+useTexture.preload(`${import.meta.env.BASE_URL}base.png`);
 
 export function Agents() {
-  const { geometry } = useModel("./robot-final.gltf");
-  const texture = useTexture("./base.png");
+  const { geometry } = useModel(`${import.meta.env.BASE_URL}/robot-final.gltf`);
+  const texture = useTexture(`${import.meta.env.BASE_URL}/base.png`);
 
   const { material, depthMaterial } = useMemo(() => {
     texture.flipY = false;

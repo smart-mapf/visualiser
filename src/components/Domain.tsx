@@ -13,17 +13,21 @@ const Obstacles = memo(
     size: { width, height } = { width: 0, height: 0 },
   }: DomainProps) => {
     const { gl } = useThree();
-    const { geometry: hull } = useModel("./box-hull.gltf");
-    const roughness = useTexture("/tile-roughness.png", (t) => {
-      t.anisotropy = gl.capabilities.getMaxAnisotropy();
-      console.log(gl.capabilities.getMaxAnisotropy());
-      t.repeat = new Vector2(width * 2, height * 2);
-      t.wrapS = RepeatWrapping;
-      t.wrapT = RepeatWrapping;
-      t.minFilter = NearestFilter;
-      t.magFilter = NearestFilter;
-    });
-    const texture = useTexture("/tile.png", (t) => {
+    const { geometry: hull } = useModel(
+      `${import.meta.env.BASE_URL}/box-hull.gltf`
+    );
+    const roughness = useTexture(
+      `${import.meta.env.BASE_URL}/tile-roughness.png`,
+      (t) => {
+        t.anisotropy = gl.capabilities.getMaxAnisotropy();
+        t.repeat = new Vector2(width * 2, height * 2);
+        t.wrapS = RepeatWrapping;
+        t.wrapT = RepeatWrapping;
+        t.minFilter = NearestFilter;
+        t.magFilter = NearestFilter;
+      }
+    );
+    const texture = useTexture(`${import.meta.env.BASE_URL}/tile.png`, (t) => {
       t.anisotropy = gl.capabilities.getMaxAnisotropy();
       t.repeat = new Vector2(width * 2, height * 2);
       t.wrapS = RepeatWrapping;
