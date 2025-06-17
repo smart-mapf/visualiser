@@ -8,7 +8,7 @@ import { AgentInstances } from "./AgentInstances";
 import { bayerHashPhysicalMeshMaterial } from "./bayerHashPhysicalMeshMaterial";
 
 useGLTF.preload(`${import.meta.env.BASE_URL}/robot-final.gltf`);
-useTexture.preload(`${import.meta.env.BASE_URL}base.png`);
+useTexture.preload(`${import.meta.env.BASE_URL}/base.png`);
 
 export function Agents() {
   const { geometry } = useModel(`${import.meta.env.BASE_URL}/robot-final.gltf`);
