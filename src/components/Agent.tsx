@@ -18,7 +18,7 @@ import { DoubleSide } from "three";
 import { AgentInstance } from "./AgentInstances";
 import { rectangleRounded } from "./rectangleRounded";
 
-const font = `/${import.meta.env.BASE_URL}/fonts/geist-medium.ttf`;
+const font = `${import.meta.env.BASE_URL}/fonts/geist-medium.ttf`;
 
 const AnimatedLine = a(Line);
 const AnimatedRing = a(Ring);
