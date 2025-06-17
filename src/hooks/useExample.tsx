@@ -27,8 +27,12 @@ export function useExample(path: string) {
       setSolutionFile(null);
       setScenarioFile(null);
       const name = basename(path, true);
-      const solution = `/examples/${name}/path/${size}/scen_1_paths.txt`;
-      const scen = `/examples/${name}-random-1.scen`;
+      const solution = `/${
+        import.meta.env.BASE_URL
+      }/examples/${name}/path/${size}/scen_1_paths.txt`;
+      const scen = `/${
+        import.meta.env.BASE_URL
+      }/examples/${name}-random-1.scen`;
       setMapFile(file);
       setSolutionFile(
         new File(

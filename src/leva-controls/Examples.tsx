@@ -17,7 +17,9 @@ export function Examples() {
       value: (
         <QueryClientProvider client={client}>
           {keys(maps).map((k) => (
-            <Example path={`/examples/${basename(k)}`} />
+            <Example
+              path={`/${import.meta.env.BASE_URL}/examples/${basename(k)}`}
+            />
           ))}
         </QueryClientProvider>
       ),
