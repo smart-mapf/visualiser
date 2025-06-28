@@ -1,7 +1,9 @@
 import { autoplayAtom, usePlaying } from "client/play";
 import {
+  useAcceleration,
   useFlip,
   useMapFile,
+  useMaxSpeed,
   useRun,
   useScenarioFile,
   useSolutionContents,
@@ -28,8 +30,11 @@ export function Inputs() {
   const submitDisabled = !(mapFile && scenarioFile && solutionFile);
   const [flip, setFlip] = useFlip();
 
+  const [maxSpeed, setMaxSpeed] = useMaxSpeed();
+  const [acceleration, setAcceleration] = useAcceleration();
+
   useControls(
-    "Inputs",
+    "Settings",
     {
       map: file({
         label: "Map file",
@@ -69,6 +74,27 @@ export function Inputs() {
       },
     },
     [buffering, flip, mapFile, scenarioFile, solutionFile]
+  );
+
+  useControls(
+    "Dynamics",
+    {
+      maxSpeed: {
+        label: "Top speed",
+        value: maxSpeed,
+        onChange: setMaxSpeed,
+        min: 10,
+        max: 20000,
+      },
+      acceleration: {
+        label: "Acceleration",
+        value: acceleration,
+        onChange: setAcceleration,
+        min: 1,
+        max: 100,
+      },
+    },
+    [maxSpeed, acceleration]
   );
 
   useControls(

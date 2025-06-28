@@ -31,6 +31,12 @@ export const useSolutionFile = () => useAtom(solutionFileAtom);
 export const flipAtom = atom<boolean>(false);
 export const useFlip = () => useAtom(flipAtom);
 
+export const maxSpeedAtom = atom<number>(500);
+export const useMaxSpeed = () => useAtom(maxSpeedAtom);
+
+export const accelerationAtom = atom<number>(10);
+export const useAcceleration = () => useAtom(accelerationAtom);
+
 // ─── Computed ────────────────────────────────────────────────────────────────
 
 export function useSolutionContents() {
@@ -70,6 +76,8 @@ export function useRun() {
   const [scenarioFile] = useAtom(scenarioFileAtom);
   const [solutionFile] = useAtom(solutionFileAtom);
   const [flip] = useFlip();
+  const [maxSpeed] = useAtom(maxSpeedAtom);
+  const [acceleration] = useAtom(accelerationAtom);
   const { data: contents } = useSolutionContents();
   const append = useSetAtom(appendAtom);
   const clear = useSetAtom(clearAtom);
@@ -95,6 +103,8 @@ export function useRun() {
             scen: await scenarioFile.text(),
             paths: await solutionFile.text(),
             flipXY: flip,
+            acceleration,
+            maxSpeed,
           };
 
           // ─── Commit ──────────────────────────
