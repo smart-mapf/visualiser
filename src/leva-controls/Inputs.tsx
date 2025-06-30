@@ -80,18 +80,18 @@ export function Inputs() {
     "Dynamics",
     {
       maxSpeed: {
-        label: "Top speed",
+        label: "Top speed (cm/s)",
         value: maxSpeed,
         onChange: setMaxSpeed,
-        min: 10,
-        max: 20000,
+        min: 100,
+        max: 2500,
       },
       acceleration: {
-        label: "Acceleration",
+        label: "Acceleration (cm/s²)",
         value: acceleration,
         onChange: setAcceleration,
-        min: 1,
-        max: 100,
+        min: 2,
+        max: 50,
       },
     },
     [maxSpeed, acceleration]
