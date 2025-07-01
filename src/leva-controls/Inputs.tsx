@@ -91,7 +91,7 @@ export function Inputs() {
         value: acceleration,
         onChange: setAcceleration,
         min: 2,
-        max: 50,
+        max: 500,
       },
     },
     [maxSpeed, acceleration]
