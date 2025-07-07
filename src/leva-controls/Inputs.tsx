@@ -1,6 +1,7 @@
 import { autoplayAtom, usePlaying } from "client/play";
 import {
   useAcceleration,
+  useAngularMaxSpeed,
   useFlip,
   useMapFile,
   useMaxSpeed,
@@ -32,6 +33,7 @@ export function Inputs() {
 
   const [maxSpeed, setMaxSpeed] = useMaxSpeed();
   const [acceleration, setAcceleration] = useAcceleration();
+  const [angularMaxSpeed, setAngularMaxSpeed] = useAngularMaxSpeed();
 
   useControls(
     "Settings",
@@ -79,22 +81,32 @@ export function Inputs() {
   useControls(
     "Dynamics",
     {
+      angularMaxSpeed: {
+        label: "Wheel rotation (deg/s)",
+        value: 30,
+        onChange: setAngularMaxSpeed,
+        min: 1,
+        max: 1080,
+        step: 0.1,
+      },
       maxSpeed: {
-        label: "Top speed (cm/s)",
+        label: "Limit speed (cm/s)",
         value: maxSpeed,
         onChange: setMaxSpeed,
         min: 100,
         max: 2500,
+        step: 0.1,
       },
       acceleration: {
-        label: "Acceleration (cm/s²)",
+        label: "Limit acceleration (cm/s²)",
         value: acceleration,
         onChange: setAcceleration,
         min: 2,
         max: 500,
+        step: 0.1,
       },
     },
-    [maxSpeed, acceleration]
+    [maxSpeed, acceleration, angularMaxSpeed]
   );
 
   useControls(

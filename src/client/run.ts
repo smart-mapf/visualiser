@@ -37,6 +37,12 @@ export const useMaxSpeed = () => useAtom(maxSpeedAtom);
 export const accelerationAtom = atom<number>(10);
 export const useAcceleration = () => useAtom(accelerationAtom);
 
+export const angularMaxSpeedAtom = atom<number>(7.5);
+export const useAngularMaxSpeed = () => useAtom(angularMaxSpeedAtom);
+
+export const angularAccelerationAtom = atom<number>(3.0);
+export const useAngularAcceleration = () => useAtom(angularAccelerationAtom);
+
 // ─── Computed ────────────────────────────────────────────────────────────────
 
 export function useSolutionContents() {
@@ -78,6 +84,8 @@ export function useRun() {
   const [flip] = useFlip();
   const [maxSpeed] = useAtom(maxSpeedAtom);
   const [acceleration] = useAtom(accelerationAtom);
+  const [angularMaxSpeed] = useAtom(angularMaxSpeedAtom);
+  const [angularAcceleration] = useAtom(angularAccelerationAtom);
   const { data: contents } = useSolutionContents();
   const append = useSetAtom(appendAtom);
   const clear = useSetAtom(clearAtom);
@@ -105,6 +113,8 @@ export function useRun() {
             flipXY: flip,
             acceleration,
             maxSpeed,
+            angularMaxSpeed,
+            angularAcceleration,
           };
 
           // ─── Commit ──────────────────────────
