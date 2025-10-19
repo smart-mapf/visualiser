@@ -3,6 +3,7 @@ import {
   useAcceleration,
   useAngularMaxSpeed,
   useFlip,
+  useInitialised,
   useMapFile,
   useMaxSpeed,
   useRun,
@@ -11,13 +12,17 @@ import {
   useSolutionFile,
 } from "client/run";
 import { useClear, useLength } from "client/state";
+import { colors } from "colors";
 import { button, useControls } from "leva";
 import { file } from "leva-plugins/file";
+import { jsx } from "leva-plugins/jsx";
 import { Suspense } from "react";
+import { useCss } from "react-use";
 import { store } from "store";
 
 export function Inputs() {
   const [, setPlaying] = usePlaying();
+  const initialised = useInitialised();
   const clear = useClear();
   const [mapFile, setMapFile] = useMapFile();
   const [scenarioFile, setScenarioFile] = useScenarioFile();
@@ -141,9 +146,28 @@ export function Inputs() {
         ),
         label: "Stop",
       },
+      ...(!initialised
+        ? {
+            initialising: jsx({
+              value: <A />,
+            }),
+          }
+        : {}),
     },
-    [length, buffering, contents?.count, submitDisabled, abort]
+    [length, buffering, contents?.count, submitDisabled, abort, initialised]
   );
 
   return <Suspense fallback={null} />;
+}
+
+function A() {
+  const cls = useCss({
+    color: colors.warning,
+    height: "var(--leva-sizes-rowHeight)",
+    textAlign: "center",
+    borderRadius: "var(--leva-radii-sm)",
+    padding: "0.6em 1.2em",
+    background: `${colors.warning}11`,
+  });
+  return <span className={cls}>Please wait while the robots initialise.</span>;
 }

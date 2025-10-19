@@ -75,6 +75,12 @@ export function useSolutionContents() {
 export const bufferingAtom = atom<boolean>(false);
 export const useBuffering = () => useAtomValue(bufferingAtom);
 
+/**
+ * Represents whether we've received agent state for the first time.
+ */
+export const initialisedAtom = atom<boolean>(true);
+export const useInitialised = () => useAtomValue(initialisedAtom);
+
 const mutex = new Mutex();
 
 export function useRun() {
@@ -93,6 +99,7 @@ export function useRun() {
   const setLog = useSetAtom(logAtom);
   const abort = useRef<() => void | null>();
   const setBuffering = useSetAtom(bufferingAtom);
+  const setInitialised = useSetAtom(initialisedAtom);
   return {
     abort,
     mutation: useMutation({
@@ -101,6 +108,7 @@ export function useRun() {
           if (!mapFile || !scenarioFile || !solutionFile || !contents?.count)
             return;
           setBuffering(true);
+          setInitialised(false);
           const controller = new AbortController();
 
           // ─── Options ──────────────────────────
@@ -163,6 +171,7 @@ export function useRun() {
                             agentState[i] = d.value;
                           });
                         }
+                        setInitialised(true);
                         break;
                       case "message":
                         setLog((t) => slice([...t, d.content], -100));
@@ -218,7 +227,10 @@ export function useRun() {
             });
           });
         }),
-      onSettled: () => setBuffering(false),
+      onSettled: () => {
+        setBuffering(false);
+        setInitialised(true);
+      },
       mutationKey: [
         "run",
         contents?.count,
