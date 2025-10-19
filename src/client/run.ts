@@ -31,13 +31,13 @@ export const useSolutionFile = () => useAtom(solutionFileAtom);
 export const flipAtom = atom<boolean>(false);
 export const useFlip = () => useAtom(flipAtom);
 
-export const maxSpeedAtom = atom<number>(500);
+export const maxSpeedAtom = atom<number>(4);
 export const useMaxSpeed = () => useAtom(maxSpeedAtom);
 
-export const accelerationAtom = atom<number>(10);
+export const accelerationAtom = atom<number>(1);
 export const useAcceleration = () => useAtom(accelerationAtom);
 
-export const angularMaxSpeedAtom = atom<number>(7.5);
+export const angularMaxSpeedAtom = atom<number>(1);
 export const useAngularMaxSpeed = () => useAtom(angularMaxSpeedAtom);
 
 export const angularAccelerationAtom = atom<number>(3.0);
