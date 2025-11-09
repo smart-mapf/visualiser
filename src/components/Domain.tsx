@@ -6,12 +6,15 @@ import { NearestFilter, RepeatWrapping, Vector2 } from "three";
 import { useThree } from "@react-three/fiber";
 import "./checkerMaterial";
 import { checkerMaterial } from "./checkerMaterial";
+import { useDarkMode } from "leva-controls/Theme";
+import { theme } from "./theme";
 
 const Obstacles = memo(
   ({
     items,
     size: { width, height } = { width: 0, height: 0 },
   }: DomainProps) => {
+    const mode = useDarkMode() ? "dark" : "light";
     const { gl } = useThree();
     const { geometry: hull } = useModel(
       `${import.meta.env.BASE_URL}/box-hull.gltf`
@@ -27,14 +30,17 @@ const Obstacles = memo(
         t.magFilter = NearestFilter;
       }
     );
-    const texture = useTexture(`${import.meta.env.BASE_URL}/tile.png`, (t) => {
-      t.anisotropy = gl.capabilities.getMaxAnisotropy();
-      t.repeat = new Vector2(width * 2, height * 2);
-      t.wrapS = RepeatWrapping;
-      t.wrapT = RepeatWrapping;
-      t.minFilter = NearestFilter;
-      t.magFilter = NearestFilter;
-    });
+    const texture = useTexture(
+      `${import.meta.env.BASE_URL}/${theme.tileTexture[mode]}`,
+      (t) => {
+        t.anisotropy = gl.capabilities.getMaxAnisotropy();
+        t.repeat = new Vector2(width * 2, height * 2);
+        t.wrapS = RepeatWrapping;
+        t.wrapT = RepeatWrapping;
+        t.minFilter = NearestFilter;
+        t.magFilter = NearestFilter;
+      }
+    );
     return (
       <group>
         <Instances
@@ -48,7 +54,7 @@ const Obstacles = memo(
           <boxGeometry />
           {items?.map?.((item, i) => (
             <Instance
-              color="#ccc"
+              color={theme.obstacle[mode]}
               key={i}
               scale={[item.width, 0.5, item.height]}
               position={[
@@ -65,11 +71,11 @@ const Obstacles = memo(
           scale={[width / 2, 0.3, height / 2]}
           position={[0, -0.3, 0]}
         >
-          <meshStandardMaterial color="#393e4d" />
+          <meshStandardMaterial color={theme.obstacle[mode]} />
         </mesh>
         <mesh receiveShadow rotation={[-Math.PI / 2, 0, -Math.PI / 2]}>
           <meshStandardMaterial
-            color="#ccc"
+            color={theme.tile[mode]}
             map={texture}
             roughnessMap={roughness}
           />

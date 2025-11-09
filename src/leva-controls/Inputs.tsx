@@ -41,7 +41,7 @@ export function Inputs() {
   const [angularMaxSpeed, setAngularMaxSpeed] = useAngularMaxSpeed();
 
   useControls(
-    "Settings",
+    "Input",
     {
       map: file({
         label: "Map file",
@@ -80,6 +80,7 @@ export function Inputs() {
         disabled: buffering,
       },
     },
+    { collapsed: true },
     [buffering, flip, mapFile, scenarioFile, solutionFile]
   );
 
@@ -149,7 +150,7 @@ export function Inputs() {
       ...(!initialised
         ? {
             initialising: jsx({
-              value: <A />,
+              value: <Warning />,
             }),
           }
         : {}),
@@ -160,7 +161,7 @@ export function Inputs() {
   return <Suspense fallback={null} />;
 }
 
-function A() {
+function Warning() {
   const cls = useCss({
     color: colors.warning,
     height: "var(--leva-sizes-rowHeight)",

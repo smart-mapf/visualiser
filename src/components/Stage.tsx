@@ -4,8 +4,11 @@ import { ACESFilmicToneMapping, NeutralToneMapping } from "three";
 import { CameraControls } from "./CameraControls";
 import { Contents } from "./Contents";
 import { Light } from "./Light";
+import { useDarkMode } from "leva-controls/Theme";
+import { theme } from "./theme";
 
 export function Stage() {
+  const mode = useDarkMode() ? "dark" : "light";
   return (
     <Canvas
       shadows
@@ -19,8 +22,8 @@ export function Stage() {
         position: [0, 5, 10],
       }}
     >
-      <fog attach="fog" args={["#cfcfcc", 20, 100]} />
-      <color attach="background" args={["#181c20"]} />
+      <fog attach="fog" args={[theme.background[mode], 20, 100]} />
+      <color attach="background" args={[theme.background[mode]]} />
       <Light />
       {/* <Sky inclination={0.52} sunPosition={[100, 100, 50]} /> */}
       <CameraControls />

@@ -17,6 +17,8 @@ import { useBoolean } from "react-use";
 import { DoubleSide } from "three";
 import { AgentInstance } from "./AgentInstances";
 import { rectangleRounded } from "./rectangleRounded";
+import { useDarkMode } from "leva-controls/Theme";
+import { theme } from "./theme";
 
 const font = `${import.meta.env.BASE_URL}/fonts/geist-medium.ttf`;
 
@@ -71,6 +73,7 @@ export function CurrentAgent({
   hovered?: boolean;
   color?: string;
 }) {
+  const mode = useDarkMode() ? "dark" : "light";
   const [x, y, z] = agent.position;
   const visibleTransitions = useTransition(visible, {
     from: { scale: 0 },
@@ -97,7 +100,7 @@ export function CurrentAgent({
                 >
                   <meshBasicMaterial
                     transparent
-                    color="#fff"
+                    color={theme.foreground[mode]}
                     depthTest={false}
                     side={DoubleSide}
                   />
@@ -106,7 +109,7 @@ export function CurrentAgent({
                   font={font}
                   renderOrder={9999}
                   fillOpacity={s.scale}
-                  color="#181c20"
+                  color={theme.background[mode]}
                   anchorX="center"
                   anchorY="middle"
                   fontSize={0.11}
@@ -130,7 +133,7 @@ export function CurrentAgent({
           v && (
             <AnimatedBillboard scale={s.scale} position={[x, y + 0.75, z]}>
               <Circle args={[0.1, 16]}>
-                <meshBasicMaterial color="#fff" />
+                <meshBasicMaterial color={theme.foreground[mode]} />
               </Circle>
             </AnimatedBillboard>
           )
@@ -148,6 +151,7 @@ export function Path({
   visible?: boolean;
   agent?: ReturnType<typeof useAgentPosition>["current"];
 }) {
+  const mode = useDarkMode() ? "dark" : "light";
   const { data } = useSolutionContents();
 
   const visibleTransitions = useTransition(visible, {
@@ -196,7 +200,7 @@ export function Path({
               <AnimatedLine
                 dashScale={5}
                 lineWidth={s.scale.to((s) => s * 4)}
-                color="#fff"
+                color={theme.foreground[mode]}
                 points={path}
                 dashed
               />

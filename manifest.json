@@ -1,0 +1,15 @@
+{
+  "name": "SMART Interactive System Demonstration",
+  "version": "0.0.1",
+  "manifest_version": 3,
+  "description": "Easily run physically-based simulations for multi-agent pathfinding.",
+  "icons": {
+    "16": "logo.png",
+    "48": "logo.png",
+    "128": "logo.png"
+  },
+  "start_url": "index.html",
+  "display": "standalone",
+  "theme_color": "#181c20",
+  "background_color": "#181c20"
+}
