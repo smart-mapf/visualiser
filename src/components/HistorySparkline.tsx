@@ -35,6 +35,7 @@ export function HistorySparkline({ id = 0 }: { id?: number }) {
         min={0}
         max={1}
         style={{
+          width: "100%",
           backgroundColor: "var(--leva-colors-elevation1)",
           borderRadius: "var(--leva-radii-sm)",
         }}
